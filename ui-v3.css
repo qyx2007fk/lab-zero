@@ -1,0 +1,1108 @@
+/* =========================================================
+   V3 — readability, difficulty, intermission talents, grenades
+   Loaded after style.css and talent-ui.css.
+   ========================================================= */
+
+/* ---------- general readability rhythm ---------- */
+kbd {
+  height: 22px;
+  min-width: 23px;
+  padding: 0 7px;
+  font-size: 13px;
+  line-height: 1;
+}
+
+.btn {
+  min-height: 46px;
+  padding: 0 22px;
+  font-size: 16px;
+  gap: 11px;
+}
+
+.btn-sm {
+  min-height: 38px;
+  padding: 0 14px;
+  font-size: 14px;
+}
+
+.btn-sm kbd {
+  height: 20px;
+  min-width: 20px;
+  font-size: 12px;
+}
+
+.btn-buy {
+  font-size: 13px;
+}
+
+.close-btn {
+  height: 40px;
+  padding: 0 12px;
+  gap: 9px;
+  font-size: 12px;
+}
+
+.close-btn b {
+  font-size: 11.5px;
+}
+
+.close-btn i {
+  font-size: 22px;
+}
+
+/* ---------- difficulty selector ---------- */
+.difficulty-picker {
+  width: min(560px, 100%);
+  margin-top: 18px;
+  padding: 10px 13px 11px;
+  border: 1px solid rgba(125, 225, 235, 0.18);
+  border-left: 2px solid rgba(103, 240, 251, 0.5);
+  background:
+    linear-gradient(100deg, rgba(92, 227, 238, 0.07), transparent 62%),
+    rgba(4, 13, 18, 0.45);
+}
+
+.difficulty-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #6f9298;
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.11em;
+}
+
+.difficulty-head b {
+  color: var(--cyan);
+  font-size: 13px;
+  letter-spacing: 0.05em;
+}
+
+.difficulty-options {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+  margin-top: 7px;
+}
+
+.difficulty-btn {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px;
+  min-height: 38px;
+  padding: 7px 11px;
+  border: 1px solid rgba(128, 205, 214, 0.18);
+  background: rgba(94, 183, 194, 0.035);
+  color: #8baaad;
+  text-align: left;
+  transition: border-color 150ms, background 150ms, color 150ms;
+}
+
+.difficulty-btn:hover {
+  border-color: rgba(137, 240, 250, 0.42);
+  background: rgba(100, 220, 230, 0.08);
+  color: #d7fbff;
+}
+
+.difficulty-btn b {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+.difficulty-btn small {
+  color: #587379;
+  font-family: var(--mono);
+  font-size: 11.5px;
+  letter-spacing: 0.04em;
+}
+
+.difficulty-btn.is-active {
+  border-color: rgba(113, 246, 255, 0.55);
+  background:
+    linear-gradient(110deg, rgba(91, 233, 243, 0.18), transparent 75%),
+    rgba(29, 89, 98, 0.24);
+  color: #efffff;
+  box-shadow: inset 0 0 18px rgba(89, 225, 238, 0.04);
+}
+
+.difficulty-btn.is-active small {
+  color: var(--cyan);
+}
+
+#difficulty-desc {
+  margin: 7px 0 0;
+  color: #779499;
+  font-family: var(--mono);
+  font-size: 11.5px;
+  line-height: 1.55;
+}
+
+/* ---------- highest wave record ---------- */
+.record-breakdown {
+  margin-top: 8px;
+  color: #738e93;
+  font-family: var(--mono);
+  font-size: 11.5px;
+  letter-spacing: 0.02em;
+  line-height: 1.45;
+}
+
+/* ---------- HUD difficulty tag ---------- */
+.difficulty-tag {
+  margin-left: auto;
+  padding: 1px 7px;
+  border: 1px solid rgba(255, 201, 123, 0.31);
+  color: var(--gold);
+  font-family: var(--mono);
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  line-height: 1.45;
+  text-transform: none;
+}
+
+/* ---------- HUD spacing for the larger type ---------- */
+@media (min-width: 1101px) {
+  .hud-top {
+    grid-template-columns: minmax(330px, 380px) minmax(330px, 420px) minmax(250px, 1fr);
+    gap: clamp(14px, 1.8vw, 28px);
+    padding: 18px 22px 0;
+  }
+
+  .agent-card {
+    width: 380px;
+  }
+
+  .mission-card {
+    width: 420px;
+  }
+
+  .right-stack,
+  .minimap-panel {
+    width: 268px;
+  }
+
+  .icon-btn {
+    width: 36px;
+    height: 36px;
+  }
+
+  .icon-btn svg {
+    width: 17px;
+    height: 17px;
+  }
+
+  .boss-hud {
+    top: 172px;
+    width: min(660px, 54vw);
+  }
+
+  .intermission-card {
+    top: 178px;
+    width: min(620px, 66vw);
+  }
+
+  .toast-stack {
+    top: 234px;
+  }
+
+  .hud-bottom {
+    right: 22px;
+    bottom: 18px;
+    left: 22px;
+    grid-template-columns: minmax(205px, 1fr) auto minmax(330px, 1fr);
+    gap: 16px;
+  }
+
+  .ammo-card {
+    width: 356px;
+    padding: 11px 15px 10px;
+  }
+
+  .weapon-slot {
+    width: 68px;
+    height: 64px;
+  }
+
+  .weapon-slot .slot-art {
+    width: 40px;
+    height: 25px;
+  }
+
+  .weapon-slot .slot-art svg {
+    width: 39px;
+  }
+
+  .weapon-slot .slot-key {
+    top: 4px;
+    left: 6px;
+  }
+
+  .dock-shop {
+    width: 112px;
+    padding: 0 12px;
+  }
+
+  .ability-button {
+    min-width: 218px;
+  }
+
+  .ammo-count {
+    top: 13px;
+    right: 16px;
+  }
+
+  .reload-line {
+    margin-top: 10px;
+  }
+
+  .minimap-panel {
+    padding: 9px;
+  }
+}
+
+.agent-stats {
+  gap: 9px;
+  padding-right: 12px;
+  white-space: nowrap;
+}
+
+.agent-meta h2 {
+  letter-spacing: 0.03em;
+}
+
+.agent-stats > span {
+  font-size: 12px;
+}
+
+.credit-chip b {
+  font-size: 13px;
+}
+
+.offhand-hud {
+  gap: 7px;
+  margin-top: 8px;
+  padding-top: 8px;
+  font-size: 11.5px;
+}
+
+.offhand-key {
+  height: 18px;
+  padding: 0 5px;
+  font-size: 11px;
+}
+
+#offhand-name {
+  font-size: 13px;
+}
+
+#offhand-state {
+  font-size: 11px;
+}
+
+#offhand-ammo {
+  font-size: 12px;
+}
+
+/* ---------- intermission talent reminder ---------- */
+.intermission-talent {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 11px;
+  padding: 9px 11px;
+  border: 1px solid rgba(175, 138, 210, 0.2);
+  background:
+    linear-gradient(100deg, rgba(166, 111, 218, 0.08), transparent 70%),
+    rgba(6, 14, 20, 0.56);
+  text-align: left;
+}
+
+.inter-talent-icon {
+  display: grid;
+  flex: 0 0 28px;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border: 1px solid rgba(201, 158, 244, 0.3);
+  color: var(--violet);
+  font-family: var(--mono);
+  font-size: 19px;
+  line-height: 1;
+  clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
+}
+
+.intermission-talent > div {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.intermission-talent b {
+  color: #decded;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+
+.intermission-talent > div span {
+  color: #8a7d95;
+  font-family: var(--mono);
+  font-size: 11.5px;
+  line-height: 1.4;
+}
+
+.intermission-talent em {
+  color: var(--gold);
+  font-size: 15px;
+  font-style: normal;
+  font-weight: 700;
+}
+
+.intermission-talent .inter-talent-cta {
+  flex: 0 0 auto;
+  color: rgba(197, 160, 232, 0.55);
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.15em;
+}
+
+.intermission-talent.has-points {
+  border-color: rgba(255, 200, 119, 0.38);
+  background:
+    linear-gradient(100deg, rgba(255, 183, 85, 0.1), transparent 66%),
+    rgba(17, 17, 16, 0.6);
+}
+
+.intermission-talent.has-points .inter-talent-icon {
+  border-color: rgba(255, 207, 130, 0.52);
+  color: var(--gold);
+  box-shadow: 0 0 17px rgba(255, 186, 83, 0.1);
+}
+
+.intermission-talent.has-points .inter-talent-cta {
+  color: var(--gold);
+}
+
+#btn-inter-talents.talent-alert {
+  border-color: rgba(255, 197, 111, 0.4);
+  color: #f2d3a2;
+  background: rgba(255, 175, 73, 0.08);
+}
+
+.intermission-actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.intermission-actions .btn {
+  width: 100%;
+  padding: 0 10px;
+}
+
+/* ---------- grenade HUD ---------- */
+.grenade-hud {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 168, 92, 0.18);
+}
+
+.grenade-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.grenade-head .micro-label {
+  display: inline-flex;
+  min-width: 0;
+  color: #a58b72;
+  font-size: 11.5px;
+  letter-spacing: 0.07em;
+  text-transform: none;
+}
+
+.grenade-head .micro-label kbd {
+  height: 17px;
+  min-width: 18px;
+  padding: 0 4px;
+  margin-right: 2px;
+  border-color: rgba(255, 179, 101, 0.34);
+  color: var(--amber);
+  font-size: 11.5px;
+}
+
+.grenade-head .micro-label b {
+  overflow: hidden;
+  color: #f1d4af;
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.grenade-switch {
+  flex: 0 0 auto;
+  color: #7e6d5e;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.03em;
+}
+
+.grenade-slots {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 5px;
+}
+
+.grenade-slot {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 3px 7px;
+  border: 1px solid rgba(171, 143, 112, 0.18);
+  background: rgba(101, 78, 55, 0.055);
+  color: #7e7265;
+  transition: border-color 140ms, background 140ms, color 140ms;
+}
+
+.grenade-slot:hover {
+  border-color: rgba(255, 202, 132, 0.35);
+  background: rgba(172, 118, 62, 0.1);
+  color: #f2d4ae;
+}
+
+.grenade-slot.is-active {
+  border-color: rgba(255, 190, 105, 0.52);
+  background: linear-gradient(180deg, rgba(255, 171, 76, 0.16), rgba(124, 74, 37, 0.06));
+  color: var(--amber);
+}
+
+.grenade-slot.is-empty {
+  opacity: 0.38;
+}
+
+.grenade-slot-icon {
+  display: grid;
+  width: 19px;
+  height: 19px;
+  place-items: center;
+}
+
+.grenade-slot-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.grenade-slot-count {
+  color: inherit;
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* ---------- grenade shop market ---------- */
+.grenade-market {
+  margin-top: 15px;
+  padding-top: 13px;
+  border-top: 1px solid rgba(131, 209, 218, 0.14);
+}
+
+.grenade-market-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 9px;
+}
+
+.grenade-market-head > div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.grenade-market-head h3 {
+  color: #d8f7f6;
+  font-family: var(--mono);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+}
+
+.grenade-market-head p {
+  color: #688086;
+  font-family: var(--mono);
+  font-size: 11.5px;
+}
+
+.grenade-list {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.grenade-shop-item {
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  min-height: 72px;
+  padding: 8px 11px;
+  border: 1px solid rgba(177, 139, 102, 0.2);
+  background:
+    linear-gradient(100deg, rgba(193, 127, 67, 0.055), transparent 65%),
+    rgba(7, 15, 19, 0.57);
+  color: #c9b69f;
+  text-align: left;
+  transition: border-color 150ms, background 150ms;
+}
+
+.grenade-shop-item:hover {
+  border-color: rgba(255, 195, 121, 0.4);
+  background:
+    linear-gradient(100deg, rgba(215, 141, 70, 0.1), transparent 65%),
+    rgba(15, 23, 25, 0.72);
+}
+
+.grenade-shop-item:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+.grenade-shop-item.is-unaffordable {
+  opacity: 0.65;
+}
+
+.grenade-shop-icon {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border: 1px solid rgba(255, 177, 92, 0.31);
+  color: var(--amber);
+  background: rgba(198, 117, 47, 0.06);
+  clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
+}
+
+.grenade-shop-icon svg {
+  width: 22px;
+  height: 22px;
+}
+
+.grenade-shop-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.grenade-shop-name {
+  color: #f2d9ba;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.grenade-shop-name em {
+  margin-left: 6px;
+  color: #866a50;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-style: normal;
+  letter-spacing: 0.06em;
+}
+
+.grenade-shop-desc {
+  overflow: hidden;
+  color: #8f7d6a;
+  font-family: var(--mono);
+  font-size: 11.5px;
+  line-height: 1.4;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.grenade-shop-stock {
+  color: #8e765d;
+  font-family: var(--mono);
+  font-size: 11.5px;
+}
+
+.grenade-shop-stock b {
+  color: var(--amber);
+  font-weight: 600;
+}
+
+.grenade-shop-buy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  min-width: 66px;
+}
+
+.grenade-shop-buy em {
+  color: #8b7c67;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-style: normal;
+}
+
+.grenade-shop-buy b {
+  color: var(--gold);
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.grenade-shop-item.is-maxed .grenade-shop-buy b {
+  color: #6d807b;
+}
+
+/* ---------- larger overlay shells ---------- */
+.talent-shell {
+  width: min(1320px, 96vw);
+  height: min(862px, 94vh);
+  max-height: none;
+}
+
+.talent-header {
+  min-height: 86px;
+}
+
+.talent-body {
+  grid-template-columns: 278px minmax(0, 1fr);
+}
+
+.talent-sidebar {
+  padding: 18px 20px 16px;
+}
+
+.talent-tree-wrap {
+  padding: 18px 22px 14px;
+}
+
+.talent-node {
+  min-height: 184px;
+  padding: 11px 12px 9px;
+}
+
+.talent-node-main {
+  margin-top: 7px;
+}
+
+.talent-icon {
+  flex-basis: 32px;
+  width: 32px;
+  height: 32px;
+}
+
+.talent-icon svg {
+  width: 21px;
+  height: 21px;
+}
+
+.talent-name {
+  font-size: 15px;
+}
+
+.talent-desc {
+  margin-top: 7px;
+  line-height: 1.55;
+  -webkit-line-clamp: 3;
+}
+
+.talent-effect {
+  margin-top: 5px;
+  line-height: 1.4;
+}
+
+.talent-node-foot {
+  padding-top: 7px;
+}
+
+.talent-tree-legend {
+  margin-top: 8px;
+}
+
+.shop-shell {
+  width: min(1320px, 96vw);
+  height: min(866px, 94vh);
+  max-height: none;
+}
+
+.shop-header {
+  min-height: 86px;
+}
+
+.weapon-card {
+  min-height: 102px;
+  padding: 11px 13px;
+}
+
+.mod-card {
+  min-height: 184px;
+}
+
+.supply-strip {
+  padding: 11px 12px;
+}
+
+.bench-current {
+  min-height: 82px;
+}
+
+.shop-footer {
+  min-height: 42px;
+}
+
+/* ---------- menu sizing after type increase ---------- */
+@media (min-width: 1201px) {
+  .menu-main {
+    grid-template-columns: minmax(0, 1fr) 378px;
+    gap: clamp(34px, 5vw, 90px);
+    padding-top: 18px;
+  }
+
+  .brief-column {
+    width: 378px;
+  }
+
+  .title-copy {
+    line-height: 1.75;
+  }
+
+  .control-grid {
+    gap: 9px 26px;
+    margin-top: 22px;
+    padding-top: 14px;
+  }
+}
+
+/* ---------- compact screens ---------- */
+@media (max-width: 1220px) {
+  .hud-top {
+    grid-template-columns: minmax(300px, 340px) minmax(300px, 370px) 1fr;
+    gap: 12px;
+    padding: 16px 18px 0;
+  }
+
+  .agent-card {
+    width: 340px;
+  }
+
+  .mission-card {
+    width: 370px;
+  }
+
+  .right-stack,
+  .minimap-panel {
+    width: 240px;
+  }
+
+  .talent-shell {
+    width: 96vw;
+  }
+
+  .talent-body {
+    grid-template-columns: 240px minmax(0, 1fr);
+  }
+
+  .talent-node {
+    min-height: 166px;
+    padding: 9px 10px 8px;
+  }
+
+  .talent-name {
+    font-size: 14px;
+  }
+
+  .shop-shell {
+    width: 96vw;
+  }
+
+  .ammo-card {
+    width: 332px;
+  }
+
+  .weapon-slot {
+    width: 62px;
+    height: 61px;
+  }
+
+  .dock-shop {
+    width: 102px;
+  }
+
+  .ability-button {
+    min-width: 196px;
+  }
+
+  .intermission-card {
+    width: min(580px, 66vw);
+  }
+}
+
+@media (max-width: 1040px) {
+  .difficulty-picker {
+    width: 100%;
+  }
+
+  .intermission-card {
+    top: 164px;
+    width: calc(100vw - 30px);
+  }
+
+  .intermission-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .boss-hud {
+    top: 158px;
+  }
+
+  .toast-stack {
+    top: 240px;
+  }
+
+  .ammo-card {
+    width: 280px;
+  }
+
+  .weapon-slot {
+    width: 54px;
+    height: 56px;
+  }
+
+  .dock-shop {
+    width: 82px;
+  }
+
+  .grenade-hud {
+    display: none;
+  }
+
+  .talent-body {
+    grid-template-columns: 220px minmax(0, 1fr);
+  }
+
+  .talent-node {
+    min-height: 148px;
+  }
+
+  .talent-tree {
+    gap: 9px;
+  }
+
+  .shop-shell {
+    width: 100vw;
+    height: 100vh;
+  }
+
+  .shop-header {
+    min-height: 78px;
+  }
+
+  .agent-stats > span:nth-child(4) {
+    display: none;
+  }
+}
+
+@media (max-height: 760px) and (min-width: 841px) {
+  .talent-shell {
+    height: 96vh;
+  }
+
+  .talent-header {
+    min-height: 70px;
+  }
+
+  .talent-node {
+    min-height: 158px;
+    padding: 8px 10px 7px;
+  }
+
+  .talent-desc {
+    -webkit-line-clamp: 2;
+  }
+
+  .talent-link {
+    flex-basis: 14px;
+    height: 14px;
+  }
+
+  .shop-shell {
+    height: 96vh;
+  }
+
+  .weapon-card {
+    min-height: 90px;
+  }
+
+  .mod-card {
+    min-height: 158px;
+  }
+
+  .shop-header {
+    min-height: 70px;
+  }
+
+  .intermission-card {
+    top: 142px;
+  }
+
+  .intermission-talent {
+    margin-top: 8px;
+    padding: 7px 9px;
+  }
+
+  .toast-stack {
+    top: 242px;
+  }
+
+  .hud-bottom {
+    bottom: 12px;
+  }
+}
+
+@media (max-width: 840px) {
+  .difficulty-options {
+    grid-template-columns: 1fr;
+  }
+
+  .difficulty-btn {
+    min-height: 34px;
+  }
+
+  .intermission-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .grenade-hud {
+    display: none;
+  }
+
+  .shop-shell {
+    height: 100vh;
+  }
+
+  .talent-shell {
+    height: 100vh;
+  }
+}
+
+/* Grenades live in the right-hand upgrade column so all three are visible. */
+.bench-panel .grenade-market {
+  margin-top: 10px;
+  padding-top: 10px;
+}
+
+.bench-panel .grenade-market-head {
+  margin-bottom: 8px;
+}
+
+.bench-panel .grenade-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.bench-panel .grenade-shop-item {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  align-items: start;
+  gap: 6px 8px;
+  min-height: 0;
+  padding: 8px;
+}
+
+.bench-panel .grenade-shop-icon {
+  grid-row: 1;
+  width: 30px;
+  height: 30px;
+}
+
+.bench-panel .grenade-shop-icon svg {
+  width: 19px;
+  height: 19px;
+}
+
+.bench-panel .grenade-shop-copy {
+  grid-column: 2;
+  gap: 1px;
+}
+
+.bench-panel .grenade-shop-name {
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.bench-panel .grenade-shop-name em {
+  display: none;
+}
+
+.bench-panel .grenade-shop-desc {
+  font-size: 11px;
+  white-space: normal;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.bench-panel .grenade-shop-stock {
+  font-size: 11px;
+}
+
+.bench-panel .grenade-shop-buy {
+  grid-column: 1 / -1;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  min-width: 0;
+  padding-top: 5px;
+  border-top: 1px solid rgba(176, 141, 103, 0.13);
+}
+
+.bench-panel .grenade-shop-buy em {
+  font-size: 11px;
+}
+
+.bench-panel .grenade-shop-buy b {
+  font-size: 13px;
+}
+
+@media (max-width: 1040px) {
+  .bench-panel .grenade-list {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .bench-panel .grenade-list {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Make it obvious that the tree can be scrolled on shorter laptop screens. */
+@media (max-height: 760px) and (min-width: 841px) {
+  .talent-tree-head p::after {
+    content: " · 滚动查看全部";
+    color: var(--gold);
+  }
+}

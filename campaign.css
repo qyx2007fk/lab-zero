@@ -1,0 +1,468 @@
+/* =========================================================
+   Campaign mode — menus, HUD, shops and completion
+   ========================================================= */
+
+/* ---------- mode picker ---------- */
+.mode-picker {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  width: min(560px, 100%);
+  margin-top: 14px;
+}
+
+.mode-btn {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-height: 64px;
+  padding: 8px 12px 9px;
+  border: 1px solid rgba(132, 213, 222, 0.18);
+  background:
+    linear-gradient(110deg, rgba(100, 204, 216, 0.045), transparent 70%),
+    rgba(4, 13, 18, 0.46);
+  color: #819b9e;
+  text-align: left;
+  transition: border-color 150ms, background 150ms, color 150ms;
+}
+
+.mode-btn:hover {
+  border-color: rgba(137, 240, 250, 0.4);
+  background: rgba(93, 212, 223, 0.075);
+}
+
+.mode-btn.is-active {
+  border-color: rgba(111, 244, 255, 0.52);
+  background:
+    linear-gradient(110deg, rgba(87, 230, 242, 0.15), transparent 74%),
+    rgba(21, 71, 79, 0.25);
+  color: #efffff;
+  box-shadow: inset 0 0 22px rgba(89, 225, 238, 0.035);
+}
+
+.mode-btn .mode-code {
+  color: #58787e;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+}
+
+.mode-btn.is-active .mode-code {
+  color: var(--cyan);
+}
+
+.mode-btn b {
+  color: #d8edef;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+.mode-btn small {
+  color: #617b80;
+  font-family: var(--mono);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.mode-btn.is-active small {
+  color: #90b9bd;
+}
+
+/* ---------- campaign HUD visibility ---------- */
+body.campaign-mode .talent-tree-btn,
+body.campaign-mode .talent-stat,
+body.campaign-mode .shield-row,
+body.campaign-mode .offhand-hud,
+body.campaign-mode .xp-row,
+body.campaign-mode .intermission-card {
+  display: none !important;
+}
+
+body.campaign-mode .dock-shop {
+  display: none;
+}
+
+body.campaign-mode .mission-card {
+  border-color: rgba(var(--campaign-accent, 111, 240, 201), 0.24);
+  background:
+    linear-gradient(110deg, rgba(var(--campaign-accent, 111, 240, 201), 0.08), transparent 48%),
+    linear-gradient(180deg, rgba(8, 19, 25, 0.9), rgba(3, 9, 13, 0.82));
+}
+
+body.campaign-mode .mission-card .micro-label {
+  color: rgba(var(--campaign-accent, 111, 240, 201), 0.8);
+}
+
+body.campaign-mode .mission-card #mission-state {
+  color: rgb(var(--campaign-accent, 111, 240, 201));
+}
+
+body.campaign-mode .mission-card .threat-meter i {
+  background: linear-gradient(90deg, rgba(var(--campaign-accent, 111, 240, 201), 0.5), rgb(var(--campaign-accent, 111, 240, 201)));
+  box-shadow: 0 0 8px rgba(var(--campaign-accent, 111, 240, 201), 0.4);
+}
+
+body.campaign-mode .agent-card::after {
+  position: absolute;
+  right: 10px;
+  bottom: 8px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: rgb(var(--campaign-accent, 111, 240, 201));
+  box-shadow: 0 0 8px rgba(var(--campaign-accent, 111, 240, 201), 0.7);
+  content: "";
+}
+
+body.campaign-mode .minimap-panel {
+  border-color: rgba(var(--campaign-accent, 111, 240, 201), 0.25);
+}
+
+/* ---------- campaign shop upgrades ---------- */
+.campaign-upgrade-section {
+  margin: 0 0 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(125, 218, 226, 0.15);
+}
+
+.campaign-upgrade-section .section-head {
+  margin-bottom: 9px;
+}
+
+.campaign-upgrade-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.campaign-upgrade-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-height: 92px;
+  padding: 9px 10px;
+  border: 1px solid rgba(123, 220, 192, 0.2);
+  background:
+    linear-gradient(120deg, rgba(96, 233, 187, 0.07), transparent 72%),
+    rgba(5, 16, 18, 0.62);
+  color: #a9c9c4;
+  text-align: left;
+  transition: border-color 150ms, background 150ms;
+}
+
+.campaign-upgrade-card:hover {
+  border-color: rgba(135, 255, 207, 0.4);
+  background:
+    linear-gradient(120deg, rgba(96, 233, 187, 0.12), transparent 72%),
+    rgba(9, 25, 26, 0.76);
+}
+
+.campaign-upgrade-card:disabled,
+.campaign-upgrade-card.is-maxed {
+  cursor: default;
+  opacity: 0.55;
+}
+
+.campaign-upgrade-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 7px;
+}
+
+.campaign-upgrade-head b {
+  color: #dcf6ed;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+
+.campaign-upgrade-head span {
+  color: #6d9c92;
+  font-family: var(--mono);
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+.campaign-upgrade-desc {
+  color: #789691;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  line-height: 1.4;
+}
+
+.campaign-upgrade-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 5px;
+  border-top: 1px solid rgba(123, 196, 181, 0.1);
+}
+
+.campaign-upgrade-foot span {
+  color: #7eaa9f;
+  font-family: var(--mono);
+  font-size: 10px;
+}
+
+.campaign-upgrade-foot b {
+  color: var(--gold);
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.campaign-upgrade-card.is-unaffordable .campaign-upgrade-foot b {
+  color: #b4775f;
+}
+
+/* ---------- campaign completion overlay ---------- */
+.campaign-complete-overlay {
+  z-index: 78;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    radial-gradient(ellipse at 50% 42%, rgba(70, 217, 190, 0.12), transparent 58%),
+    rgba(1, 6, 7, 0.82);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  animation: overlay-in 240ms ease-out both;
+}
+
+.campaign-complete-card {
+  position: relative;
+  width: min(720px, 92vw);
+  padding: 28px 32px 22px;
+  overflow: hidden;
+  border: 1px solid rgba(125, 255, 207, 0.3);
+  background:
+    linear-gradient(130deg, rgba(87, 236, 200, 0.09), transparent 39%),
+    linear-gradient(180deg, rgba(7, 20, 21, 0.98), rgba(2, 9, 11, 0.98));
+  clip-path: polygon(0 0, calc(100% - 24px) 0, 100% 24px, 100% 100%, 0 100%);
+  box-shadow: 0 40px 110px rgba(0, 0, 0, 0.6), 0 0 52px rgba(80, 235, 197, 0.08);
+  animation: shop-in 320ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+.campaign-complete-card::before {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 160px;
+  height: 1px;
+  background: var(--mint);
+  box-shadow: 0 0 14px rgba(114, 255, 205, 0.55);
+  content: "";
+}
+
+.campaign-complete-kicker {
+  color: #87b9aa;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+}
+
+.campaign-complete-kicker span {
+  color: #567a70;
+}
+
+.campaign-complete-mark {
+  position: absolute;
+  top: 22px;
+  right: 30px;
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  width: 54px;
+  height: 54px;
+  padding: 12px;
+  border: 1px solid rgba(126, 255, 204, 0.35);
+  transform: rotate(45deg);
+  background: rgba(83, 231, 187, 0.055);
+}
+
+.campaign-complete-mark i {
+  display: block;
+  width: 4px;
+  background: var(--mint);
+  box-shadow: 0 0 8px rgba(119, 255, 201, 0.7);
+}
+
+.campaign-complete-mark i:nth-child(1) { height: 9px; }
+.campaign-complete-mark i:nth-child(2) { height: 22px; }
+.campaign-complete-mark i:nth-child(3) { height: 15px; }
+
+.campaign-complete-card h2 {
+  margin-top: 19px;
+  color: #edfffb;
+  font-size: 36px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  line-height: 1.1;
+}
+
+.campaign-complete-card > p {
+  margin-top: 8px;
+  color: #7eaaa1;
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.campaign-complete-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1px;
+  margin-top: 22px;
+  border: 1px solid rgba(120, 203, 185, 0.15);
+  background: rgba(119, 200, 182, 0.1);
+}
+
+.campaign-complete-stats > div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 13px;
+  background: rgba(4, 13, 15, 0.85);
+}
+
+.campaign-complete-stats span {
+  color: #66877f;
+  font-family: var(--mono);
+  font-size: 11px;
+}
+
+.campaign-complete-stats b {
+  color: #c7f5e8;
+  font-family: var(--mono);
+  font-size: 22px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+
+.campaign-complete-bosses {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 18px;
+  color: #82a89e;
+  font-family: var(--mono);
+  font-size: 11px;
+}
+
+.campaign-complete-bosses span {
+  margin-right: 3px;
+  color: #5e857a;
+}
+
+.campaign-complete-bosses b {
+  padding: 4px 8px;
+  border: 1px solid rgba(127, 252, 207, 0.2);
+  color: #c8f6e8;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.campaign-complete-bosses i {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--mint);
+  box-shadow: 0 0 7px rgba(118, 255, 201, 0.6);
+}
+
+.campaign-complete-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  margin-top: 16px;
+  padding-top: 13px;
+  border-top: 1px solid rgba(120, 203, 185, 0.13);
+  color: #6f988d;
+  font-family: var(--mono);
+  font-size: 11px;
+}
+
+.campaign-complete-meta span:first-child {
+  color: var(--gold);
+}
+
+.campaign-complete-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 21px;
+}
+
+/* ---------- compact / short screens ---------- */
+@media (max-width: 840px) {
+  .mode-picker {
+    grid-template-columns: 1fr;
+  }
+
+  .campaign-upgrade-list {
+    grid-template-columns: 1fr;
+  }
+
+  .campaign-complete-card {
+    padding: 22px 18px 18px;
+  }
+
+  .campaign-complete-card h2 {
+    font-size: 30px;
+  }
+
+  .campaign-complete-stats {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .campaign-complete-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .campaign-complete-mark {
+    display: none;
+  }
+}
+
+@media (max-height: 760px) {
+  .mode-btn {
+    min-height: 56px;
+    padding-top: 6px;
+    padding-bottom: 6px;
+  }
+
+  .mode-btn small {
+    display: none;
+  }
+
+  .mode-picker {
+    margin-top: 10px;
+  }
+
+  .campaign-complete-card {
+    padding-top: 20px;
+    padding-bottom: 16px;
+  }
+
+  .campaign-complete-card h2 {
+    margin-top: 12px;
+    font-size: 30px;
+  }
+
+  .campaign-complete-stats {
+    margin-top: 15px;
+  }
+
+  .campaign-complete-actions {
+    margin-top: 15px;
+  }
+}

@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#05080d">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23050b0e'/%3E%3Ccircle cx='32' cy='32' r='15' fill='none' stroke='%2377f4ff' stroke-width='2'/%3E%3Cpath d='M32 8v12M32 44v12M8 32h12M44 32h12' stroke='%2377f4ff' stroke-width='2'/%3E%3C/svg%3E">
+  <title>零号实验区 · LAB ZERO</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="talent-ui.css">
+  <link rel="stylesheet" href="ui-v3.css">
+  <link rel="stylesheet" href="campaign.css">
+  <link rel="stylesheet" href="v4-ui.css">
+</head>
+<body>
+  <main id="game-root">
+    <canvas id="game" aria-label="零号实验区 2D 战术射击游戏画面"></canvas>
+    <div class="fx-scanlines" aria-hidden="true"></div>
+    <div class="fx-grain" aria-hidden="true"></div>
+    <div id="damage-vignette" aria-hidden="true"></div>
+    <div id="hit-flash" aria-hidden="true"></div>
+
+    <!-- ==================== IN-GAME HUD ==================== -->
+    <div id="hud" class="hud is-hidden">
+      <div class="hud-top">
+        <section class="agent-card hud-panel">
+          <div class="agent-row">
+            <div class="agent-avatar" aria-hidden="true">
+              <span>K</span>
+              <i></i>
+            </div>
+            <div class="agent-meta">
+              <span class="micro-label">OPERATIVE // K-07</span>
+              <h2 id="agent-name">干员 · 流浪者</h2>
+            </div>
+            <div class="level-chip">
+              <span>COMBAT</span>
+              <strong>LV.<b id="stat-level">01</b></strong>
+            </div>
+          </div>
+
+          <div class="meter-stack">
+            <div class="meter-row">
+              <div class="meter-head"><span><i class="dot hp-dot"></i>生命值</span><b id="hp-text">100 / 100</b></div>
+              <div class="meter hp-meter"><i id="hp-fill" style="width:100%"></i><span></span></div>
+            </div>
+            <div id="shield-row" class="meter-row shield-row is-hidden">
+              <div class="meter-head"><span><i class="dot shield-dot"></i>相位护盾</span><b id="shield-text">70 / 70</b></div>
+              <div class="meter shield-meter"><i id="shield-fill" style="width:100%"></i><span></span></div>
+            </div>
+            <div class="meter-row xp-row">
+              <div class="meter-head"><span><i class="dot xp-dot"></i>战斗经验</span><b id="xp-text">0 / 80</b></div>
+              <div class="meter xp-meter"><i id="xp-fill" style="width:0%"></i><span></span></div>
+            </div>
+          </div>
+
+          <div class="agent-stats">
+            <span>移速 <b id="stat-speed">100%</b></span>
+            <span>装填 <b id="stat-reload">100%</b></span>
+            <span>击杀 <b id="stat-kills">0</b></span>
+            <span class="talent-stat">天赋 <b id="stat-talents">0</b></span>
+            <span class="credit-chip"><i class="coin-mark">C</i><b id="stat-credits">0</b><em>CR</em></span>
+          </div>
+        </section>
+
+        <section class="mission-card hud-panel">
+          <div class="micro-label"><i class="signal-dot"></i><span id="mission-kicker">ACTIVE DIRECTIVE // 实验体清剿</span><b id="hud-difficulty" class="difficulty-tag">普通</b></div>
+          <div class="mission-head">
+            <h2 id="wave-title">第 01 波</h2>
+            <span id="mission-state" class="mission-state">正在部署</span>
+          </div>
+          <div class="threat-row">
+            <span id="enemy-count">0 个生命信号</span>
+            <div class="threat-meter"><i id="threat-fill" style="width:100%"></i></div>
+            <span id="threat-label">THREAT 01</span>
+          </div>
+        </section>
+
+        <div class="right-stack">
+          <div class="top-actions">
+            <button id="btn-talents" class="icon-btn talent-tree-btn" type="button" aria-label="打开天赋科技树" title="天赋科技树 (T)">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5a2.3 2.3 0 0 1 1.2 4.26v2.1l4.55 2.62a2.3 2.3 0 1 1-.98 1.74l-4.77-2.75-4.78 2.75a2.3 2.3 0 1 1-.97-1.74L10.8 8.86v-2.1A2.3 2.3 0 0 1 12 2.5Zm6.9 10.1a.8.8 0 1 0 0 1.6.8.8 0 0 0 0-1.6ZM5.1 12.6a.8.8 0 1 0 0 1.6.8.8 0 0 0 0-1.6Z" fill="none" stroke="currentColor" stroke-width="1.35"/><path d="M12 12.1v3.15a2.3 2.3 0 1 1-1.6 0V12.1" fill="none" stroke="currentColor" stroke-width="1.35"/><circle cx="12" cy="18.9" r=".8" fill="currentColor"/></svg>
+              <span id="talent-badge" class="talent-badge">0</span>
+            </button>
+            <button id="btn-audio" class="icon-btn" type="button" aria-label="开启或关闭声音" title="声音">
+              <svg class="icon-on" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4Zm12.5 3a4.5 4.5 0 0 0-2-3.74v7.48A4.5 4.5 0 0 0 16.5 12Zm-2-8.7v2.1a7 7 0 0 1 0 13.2v2.1a9 9 0 0 0 0-17.4Z"/></svg>
+              <svg class="icon-off" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4Zm12.2 3 2.65 2.65-1.4 1.4L14.8 13.4l-2.65 2.65-1.4-1.4L13.4 12l-2.65-2.65 1.4-1.4L14.8 10.6l2.65-2.65 1.4 1.4L16.2 12Z"/></svg>
+            </button>
+            <button id="btn-settings" class="icon-btn" type="button" aria-label="打开设置" title="设置">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8.3a3.7 3.7 0 1 0 0 7.4 3.7 3.7 0 0 0 0-7.4Zm8.25 4.8v-2.2l-2.2-.78a7.4 7.4 0 0 0-.7-1.7l1.05-2.1-1.56-1.56-2.1 1.05a7.4 7.4 0 0 0-1.7-.7L12.27 3h-2.2l-.78 2.2a7.4 7.4 0 0 0-1.7.7l-2.1-1.05-1.56 1.56 1.05 2.1a7.4 7.4 0 0 0-.7 1.7L3 11.1v2.2l2.2.78c.16.6.4 1.17.7 1.7l-1.05 2.1 1.56 1.56 2.1-1.05c.53.3 1.1.54 1.7.7l.78 2.2h2.2l.78-2.2a7.4 7.4 0 0 0 1.7-.7l2.1 1.05 1.56-1.56-1.05-2.1c.3-.53.54-1.1.7-1.7l2.2-.78Z" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linejoin="round"/></svg>
+            </button>
+            <button id="btn-fullscreen" class="icon-btn" type="button" aria-label="切换全屏" title="全屏">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h6v2H6v4H4V4Zm10 0h6v6h-2V6h-4V4ZM4 14h2v4h4v2H4v-6Zm14 0h2v6h-6v-2h4v-4Z"/></svg>
+            </button>
+            <button id="btn-speed" class="icon-btn speed-btn is-hidden" type="button" aria-label="切换游戏速度（仅普通无尽）" title="切换游戏速度（仅普通无尽）">
+              <span id="speed-label">1×</span>
+            </button>
+            <button id="btn-pause" class="icon-btn" type="button" aria-label="暂停行动" title="暂停 / ESC">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4h4v16H7V4Zm6 0h4v16h-4V4Z"/></svg>
+            </button>
+          </div>
+
+          <section class="minimap-panel hud-panel">
+            <div class="minimap-head"><span>SECTOR MAP</span><span id="minimap-sector">07—B</span></div>
+            <div class="minimap-frame">
+              <canvas id="minimap" width="288" height="180" aria-label="区域小地图"></canvas>
+              <i class="map-corner tl"></i><i class="map-corner tr"></i><i class="map-corner bl"></i><i class="map-corner br"></i>
+            </div>
+          </section>
+        </div>
+      </div>
+
+      <div id="boss-hud" class="boss-hud is-hidden">
+        <div class="boss-head">
+          <span class="boss-tag" id="boss-tag">HIGH-VALUE TARGET</span>
+          <h3><span id="boss-name">区域守卫</span> <em id="boss-code">// SECTOR GUARDIAN</em></h3>
+          <span id="boss-phase">阶段 I</span>
+        </div>
+        <div class="boss-track"><i id="boss-hp-fill" style="width:100%"></i><span class="boss-segments"></span></div>
+        <div class="boss-sub"><span id="boss-hp-text">1500 / 1500</span><span id="boss-desc">威胁等级：致命 · 具备召唤能力</span></div>
+      </div>
+
+      <div id="wave-banner" class="wave-banner">
+        <span id="banner-kicker" class="banner-kicker">CONTAINMENT PROTOCOL</span>
+        <h2 id="banner-title">第 01 波</h2>
+        <p id="banner-sub">清除区域内全部实验体</p>
+      </div>
+
+      <div id="toast-stack" class="toast-stack" aria-live="polite"></div>
+
+      <section id="intermission-card" class="intermission-card is-hidden hud-panel">
+        <div class="intermission-eyebrow"><span>SECTOR SECURED</span><b id="intermission-reward">+0 CR</b></div>
+        <h2 id="intermission-title">区域已肃清</h2>
+        <p id="intermission-sub">利用这段时间补给装备。下一波将在 <b id="next-countdown">15</b> 秒后到达。</p>
+        <div id="inter-talent-row" class="intermission-talent">
+          <span class="inter-talent-icon" aria-hidden="true">◇</span>
+          <div><b>科技树强化</b><span>可用 <em id="inter-talent-points">0</em> 天赋点 · 按 <kbd>T</kbd> 查看可解锁技能</span></div>
+          <span class="inter-talent-cta" aria-hidden="true">NEURAL</span>
+        </div>
+        <div class="intermission-actions">
+          <button id="btn-next-wave" class="btn btn-ghost btn-sm" type="button">提前迎战 <kbd>N</kbd></button>
+          <button id="btn-inter-shop" class="btn btn-primary btn-sm" type="button">军械库 <kbd>B</kbd></button>
+          <button id="btn-inter-talents" class="btn btn-ghost btn-sm" type="button">科技树 <kbd>T</kbd></button>
+        </div>
+      </section>
+
+      <section id="revive-hud" class="revive-hud is-hidden">
+        <div class="revive-head"><span class="micro-label">EMERGENCY RECONSTRUCTION</span><b id="revive-count">5.0s</b></div>
+        <h3>紧急重构中</h3>
+        <div class="revive-track"><i id="revive-fill" style="width:0%"></i></div>
+        <p>无法攻击 · 重构期间再次倒下将永久死亡</p>
+      </section>
+
+      <div class="hud-bottom">
+        <div class="field-tools">
+          <div id="ability-bar" class="ability-bar is-hidden">
+            <button id="btn-character-skill" class="ability-button character-skill-btn is-hidden" type="button" title="使用角色主动技能 (空格键)">
+              <span class="ability-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M12 2.7 14 8l5.3 2-5.3 2-2 5.3-2-5.3L4.7 10 10 8l2-5.3Z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><circle cx="18.5" cy="18.5" r="2.2" fill="none" stroke="currentColor" stroke-width="1.2"/></svg>
+              </span>
+              <span class="ability-copy"><b id="character-skill-name">角色技能</b><small id="character-skill-status">空格 · 就绪</small></span>
+              <span class="ability-meter"><i id="character-skill-fill" style="width:100%"></i></span>
+            </button>
+            <button id="btn-turret" class="ability-button is-hidden" type="button" title="部署哨戒炮塔 (F)">
+              <span class="ability-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="5" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="12" cy="13" r="1.8" fill="currentColor"/><path d="M12 8V5M12 21v-3M7 13H4M20 13h-3M10 18h4l1 3H9l1-3Z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+              </span>
+              <span class="ability-copy"><b>哨戒炮塔</b><small id="turret-status">F · 部署</small></span>
+              <span class="ability-meter"><i id="turret-fill" style="width:100%"></i></span>
+            </button>
+            <div id="respawn-chip" class="ability-button ability-static is-hidden" title="紧急重构：致命伤害时进入重构，保持存活后重生">
+              <span class="ability-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.2-5.5M20 3v5h-5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 8v4.5l3 1.8" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+              </span>
+              <span class="ability-copy"><b>紧急重构</b><small id="respawn-status">被动 · 就绪</small></span>
+            </div>
+          </div>
+          <div class="dash-tool">
+            <kbd>SHIFT</kbd>
+            <div><span id="dash-label">战术冲刺</span><div class="dash-meter"><i id="dash-fill" style="width:100%"></i></div></div>
+          </div>
+          <span id="field-hint" class="hold-tip">左键长按 · 连续射击</span>
+        </div>
+
+        <div class="weapon-dock hud-panel">
+          <div id="weapon-slots" class="weapon-slots"></div>
+          <button id="btn-shop" class="dock-shop" type="button" aria-label="打开军械库">
+            <kbd>B</kbd>
+            <span><b>军械库</b><small>ARMORY</small></span>
+            <i></i>
+          </button>
+        </div>
+
+        <section class="ammo-card hud-panel">
+          <div class="ammo-meta">
+            <span id="weapon-slot-label" class="micro-label">PRIMARY // SLOT 01</span>
+            <h2 id="weapon-name">制式手枪</h2>
+            <span id="weapon-code">M9-K // SIDEARM</span>
+          </div>
+          <div class="ammo-count"><strong id="ammo-mag">12</strong><span>/ ∞</span></div>
+          <div class="reload-line">
+            <span id="reload-label">R 换弹</span>
+            <div id="reload-track" class="reload-track"><i id="reload-fill"></i></div>
+          </div>
+          <div id="offhand-hud" class="offhand-hud is-hidden">
+            <span class="offhand-key">RMB</span>
+            <b id="offhand-name">未配置副手</b>
+            <span id="offhand-state">右键武器槽指定</span>
+            <span id="offhand-ammo">— / ∞</span>
+          </div>
+          <div id="grenade-hud" class="grenade-hud">
+            <div class="grenade-head">
+              <span class="micro-label"><kbd>Q</kbd> 投掷 · <b id="grenade-current-name">破片手雷</b></span>
+              <span id="grenade-switch-help" class="grenade-switch">E 切换</span>
+            </div>
+            <div id="grenade-slots" class="grenade-slots"></div>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <!-- ==================== INTRO CINEMATIC ==================== -->
+    <section id="intro-overlay" class="intro-overlay" aria-label="开场动画">
+      <div class="intro-grid" aria-hidden="true"></div>
+      <div class="intro-beam" aria-hidden="true"></div>
+      <div class="intro-scanlines" aria-hidden="true"></div>
+      <header class="intro-head">
+        <div class="intro-brand">
+          <span class="intro-seal">07</span>
+          <div><b>ASTRA GENE-LABS</b><span>DEEP SPACE BIO-LAB / SECTOR 07</span></div>
+        </div>
+        <div class="intro-alert"><i></i><span>CONTAINMENT BREACH</span><b>K-07</b></div>
+      </header>
+      <div class="intro-center">
+        <div id="intro-kicker" class="intro-kicker">INCIDENT REPORT // 03:47</div>
+        <div id="intro-story" class="intro-story">
+          <p id="intro-line" class="intro-line">深空生物研究所 · 第七区</p>
+          <span id="intro-subline" class="intro-subline">ASTRA GENE-LABS / OFFLINE SIMULATION</span>
+        </div>
+        <div id="intro-title" class="intro-title" aria-hidden="true">
+          <span class="intro-title-code">SURVIVAL PROTOCOL // K-07</span>
+          <strong>零号<span>实验区</span></strong>
+          <em>LAB <b>ZERO</b></em>
+        </div>
+      </div>
+      <footer class="intro-footer">
+        <div class="intro-progress"><i id="intro-progress-fill"></i></div>
+        <div class="intro-footer-row">
+          <span id="intro-counter" class="intro-counter">01 / 04</span>
+          <div class="intro-actions">
+            <button id="btn-intro-skip" class="intro-skip" type="button">跳过 // SKIP</button>
+            <button id="btn-intro-enter" class="btn btn-primary intro-enter is-hidden" type="button">进入主界面 <span>ENTER</span></button>
+          </div>
+        </div>
+      </footer>
+    </section>
+
+    <!-- ==================== START SCREEN ==================== -->
+    <section id="menu-screen" class="overlay menu-screen">
+      <div class="menu-vignette" aria-hidden="true"></div>
+      <div class="menu-shell">
+        <header class="menu-brand">
+          <div class="brand-mark" aria-hidden="true"><i></i><i></i><span>07</span></div>
+          <div class="brand-text">
+            <span>ASTRA GENE-LABS</span>
+            <b>深空生物研究所 · 第七区</b>
+          </div>
+          <div class="clearance"><span>CLEARANCE</span><b>K-07</b><i></i></div>
+        </header>
+
+        <div class="menu-main">
+          <div class="title-column">
+            <div class="title-kicker"><i></i>CONTAINMENT BREACH / 收容失效</div>
+            <h1 class="game-title">
+              <span class="title-cn">零号<span>实验区</span></span>
+              <span class="title-en">LAB <b>ZERO</b></span>
+            </h1>
+            <div class="mode-picker" role="group" aria-label="选择游戏模式">
+              <button class="mode-btn is-active" type="button" data-menu-mode="endless" aria-pressed="true">
+                <span class="mode-code">01 // ENDLESS</span>
+                <b>无尽模式</b>
+                <small>无限波次 · 冲击最高纪录</small>
+              </button>
+              <button class="mode-btn" type="button" data-menu-mode="campaign" aria-pressed="false">
+                <span class="mode-code">02 // CAMPAIGN</span>
+                <b>闯关模式</b>
+                <small>3 张折返地图 · 3 场 Boss 战</small>
+              </button>
+              <button class="mode-btn" type="button" data-menu-mode="rogue" aria-pressed="false">
+                <span class="mode-code">03 // ROGUE ENDLESS</span>
+                <b>肉鸽无尽</b>
+                <small>随机楼层 · 加速强化</small>
+              </button>
+              <button class="mode-btn" type="button" data-menu-mode="training" aria-pressed="false">
+                <span class="mode-code">04 // TRAINING</span>
+                <b>训练场</b>
+                <small>自由改装 · 沙袋 DPS</small>
+              </button>
+              <button class="mode-btn story-mode-btn" type="button" data-menu-mode="story" aria-pressed="false">
+                <span class="mode-code">05 // STORY</span>
+                <b>剧情模式</b>
+                <small>零号逃逸 · 多结局</small>
+              </button>
+            </div>
+
+            <div class="difficulty-picker" role="group" aria-label="选择难度">
+              <div class="difficulty-head"><span>THREAT PROTOCOL // 难度</span><b id="difficulty-label">普通</b></div>
+              <div class="difficulty-options">
+                <button class="difficulty-btn" type="button" data-difficulty="easy" aria-pressed="false"><b>简单</b><small>低威胁</small></button>
+                <button class="difficulty-btn is-active" type="button" data-difficulty="normal" aria-pressed="true"><b>普通</b><small>标准</small></button>
+                <button class="difficulty-btn" type="button" data-difficulty="hard" aria-pressed="false"><b>困难</b><small>高威胁</small></button>
+                <button class="difficulty-btn inferno" type="button" data-difficulty="inferno" aria-pressed="false"><b>炼狱</b><small>INFERNO</small></button>
+              </div>
+              <p id="difficulty-desc">标准收容协议。敌人数量、强度与奖励均按基础数值运行。</p>
+            </div>
+
+            <div class="menu-actions">
+              <button id="btn-start" class="btn btn-primary btn-deploy" type="button">
+                <span class="btn-arrow" aria-hidden="true">→</span>
+                <span><b id="start-label">进入实验区</b><small id="start-sub">DEPLOY INTO SECTOR 07</small></span>
+              </button>
+              <button id="btn-menu-audio" class="btn btn-icon-text" type="button" aria-label="切换声音">
+                <svg class="icon-on" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4Zm12.5 3a4.5 4.5 0 0 0-2-3.74v7.48A4.5 4.5 0 0 0 16.5 12Zm-2-8.7v2.1a7 7 0 0 1 0 13.2v2.1a9 9 0 0 0 0-17.4Z"/></svg>
+                <svg class="icon-off" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4Zm12.2 3 2.65 2.65-1.4 1.4L14.8 13.4l-2.65 2.65-1.4-1.4L13.4 12l-2.65-2.65 1.4-1.4L14.8 10.6l2.65-2.65 1.4 1.4L16.2 12Z"/></svg>
+                <span>音频开启</span>
+              </button>
+              <button id="btn-menu-settings" class="btn btn-icon-text" type="button" aria-label="打开设置">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8.3a3.7 3.7 0 1 0 0 7.4 3.7 3.7 0 0 0 0-7.4Zm8.25 4.8v-2.2l-2.2-.78a7.4 7.4 0 0 0-.7-1.7l1.05-2.1-1.56-1.56-2.1 1.05a7.4 7.4 0 0 0-1.7-.7L12.27 3h-2.2l-.78 2.2a7.4 7.4 0 0 0-1.7.7l-2.1-1.05-1.56 1.56 1.05 2.1a7.4 7.4 0 0 0-.7 1.7L3 11.1v2.2l2.2.78c.16.6.4 1.17.7 1.7l-1.05 2.1 1.56 1.56 2.1-1.05c.53.3 1.1.54 1.7.7l.78 2.2h2.2l.78-2.2a7.4 7.4 0 0 0 1.7-.7l2.1 1.05 1.56-1.56-1.05-2.1c.3-.53.54-1.1.7-1.7l2.2-.78Z" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linejoin="round"/></svg>
+                <span>设置</span>
+              </button>
+              <button id="btn-menu-characters" class="btn btn-icon-text character-menu-btn" type="button" aria-label="打开角色与宠物菜单">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="7.1" cy="8" r="2.6" fill="none" stroke="currentColor" stroke-width="1.35"/><path d="M2.9 19.5c.3-3.2 1.9-5 4.2-5 2.2 0 3.8 1.7 4.1 4.5" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round"/><path d="M15.3 11.8l1.3-2.1 1.4 2.1c.6.2 1.1.6 1.5 1.1" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/><circle cx="17.6" cy="15.3" r="3.1" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M14.6 17.2h-1.3M21.9 17.2h-1.3M16.3 15.2h.1M18.8 15.2h.1M17.6 17.1h.1" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><path d="M14.2 12.2 13 11.4M21 12.2l1.2-.8" stroke="currentColor" stroke-width="1" stroke-linecap="round" opacity=".8"/></svg>
+                <span>角色/宠物</span>
+              </button>
+              <button id="btn-menu-bestiary" class="btn btn-icon-text" type="button" aria-label="打开敌人图鉴">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5c2.8-1.1 5.4-.8 8 .9 2.6-1.7 5.2-2 8-.9v13.2c-2.8-.9-5.4-.6-8 1-2.6-1.6-5.2-1.9-8-1V5.5Z" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path d="M12 6.4v12.2M7 9.2c1.1-.1 2.1.1 3 .6M7 12.3c1.1-.1 2.1.1 3 .6M17 9.2c-1.1-.1-2.1.1-3 .6M17 12.3c-1.1-.1-2.1.1-3 .6" fill="none" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg>
+                <span>图鉴</span>
+              </button>
+            </div>
+            <button id="btn-clear-checkpoint" class="menu-checkpoint-clear is-hidden" type="button">放弃无尽进度</button>
+            <div id="menu-audio-hint" class="menu-audio-hint"><i></i><span>首次点击后开启主菜单 BGM</span><em>CLICK TO ARM AUDIO</em></div>
+
+            <details class="control-fold">
+              <summary><span><i></i>操作说明</span><b>COMMAND INPUT</b><em>+</em></summary>
+              <div class="control-grid">
+                <div class="control-item"><kbd class="key-wide">W A S D</kbd><span>移动</span></div>
+              <div class="control-item"><span class="mouse-icon" aria-hidden="true"><i></i></span><span>瞄准 / 左键射击</span></div>
+              <div id="control-dual" class="control-item"><kbd>RMB</kbd><span>双持副手射击</span></div>
+              <div class="control-item"><kbd>SPACE</kbd><span>角色主动技能</span></div>
+              <div class="control-item"><kbd>Q / G</kbd><span>手雷 / 切换</span></div>
+              <div class="control-item"><kbd>R</kbd><span>换弹</span></div>
+              <div class="control-item"><kbd>1 — 5</kbd><span>切换武器</span></div>
+              <div class="control-item"><kbd>SHIFT</kbd><span>战术冲刺</span></div>
+              <div id="control-shop" class="control-item"><kbd>B</kbd><span>商店 / 军械库</span></div>
+              <div id="control-tech" class="control-item"><kbd>T</kbd><span>科技树</span></div>
+              <div class="control-item"><kbd>E</kbd><span>搜索补给</span></div>
+                <div class="control-item"><kbd>F</kbd><span>交互 / 战术技能</span></div>
+              </div>
+            </details>
+          </div>
+
+          <aside class="brief-column">
+            <div class="brief-card">
+              <div class="brief-head">
+                <span>MISSION BRIEF</span>
+                <b>01 / 03</b>
+              </div>
+              <h3 id="brief-title">活着离开<br>收容核心</h3>
+              <p id="brief-copy">实验体正在突破封锁。收集信用点，在军械库中升级火力，在科技树中接入双持、护盾、炮塔与紧急重构。</p>
+              <div class="brief-divider"></div>
+              <div id="hostile-list" class="hostile-list">
+                <div class="hostile-row">
+                  <span class="hostile-icon normal"></span>
+                  <div><b>普通士兵</b><small>基础实验体 · 掉落 1—10 CR</small></div>
+                  <em>低威胁</em>
+                </div>
+                <div class="hostile-row">
+                  <span class="hostile-icon elite"></span>
+                  <div><b>精英士兵</b><small>高护甲单位 · 掉落 20—50 CR</small></div>
+                  <em>中威胁</em>
+                </div>
+                <div class="hostile-row">
+                  <span class="hostile-icon boss"></span>
+                  <div><b>士官长</b><small>可召唤援军 · 掉落 200—500 CR</small></div>
+                  <em class="danger">致命</em>
+                </div>
+              </div>
+              <div id="brief-warning" class="warning-strip"><i>!</i><span>每 3 波检测到一次指挥官级高能反应</span></div>
+            </div>
+
+            <div class="record-card">
+              <div><span id="record-label">历史最高波次</span><b id="best-wave">WAVE 00</b></div>
+              <p id="best-copy">尚无记录。第一支小队正在等你。</p>
+              <div id="best-breakdown" class="record-breakdown">简单 00 · 普通 00 · 困难 00</div>
+              <div class="record-scan" aria-hidden="true"><i></i></div>
+            </div>
+          </aside>
+        </div>
+
+        <footer class="menu-footer">
+          <span><i class="live-dot"></i>OFFLINE SIMULATION · 本地运行</span>
+          <span>鼠标控制准星 · 左键单击 / 长按射击</span>
+          <span>BUILD 6.0.1</span>
+        </footer>
+      </div>
+    </section>
+
+    <!-- ==================== CHARACTERS ==================== -->
+    <section id="characters-overlay" class="overlay roster-overlay is-hidden" aria-label="角色菜单">
+      <div class="roster-shell">
+        <header class="roster-head">
+          <div><span class="micro-label">OPERATIVE ROSTER // K-07</span><h2>角色 / 宠物</h2></div>
+          <div class="roster-head-right">
+            <div class="token-balance"><span>角色代币</span><b id="character-token-count">0</b><em>TOKEN</em></div>
+            <button id="btn-characters-close" class="settings-close" type="button" aria-label="关闭角色菜单"><span>ESC</span><b>×</b></button>
+          </div>
+        </header>
+        <p class="roster-lead">阿兰默认解锁。其余干员与宠物共用角色代币：闯关首通 30/60/100，肉鸽抵达 5 / 10 层，无尽抵达 5 / 10 / 15 波均可获得对应难度的代币。开发者模式下还会解锁隐藏传奇干员「瓦尔基里」。角色与宠物能力将在下一局生效。</p>
+        <div class="roster-tabs" role="tablist" aria-label="角色与宠物">
+          <button class="roster-tab is-active" type="button" data-roster-tab="characters" role="tab" aria-selected="true">角色 <small>OPERATIVES</small></button>
+          <button class="roster-tab" type="button" data-roster-tab="pets" role="tab" aria-selected="false">宠物 <small>COMPANIONS</small></button>
+        </div>
+        <div id="character-grid" class="character-grid"></div>
+        <div id="pet-grid" class="pet-grid is-hidden"></div>
+        <footer class="roster-foot">
+          <span>当前选择：<b id="character-current">阿兰</b> · 宠物：<b id="pet-current">未携带</b></span>
+          <span>按 <kbd>ESC</kbd> 返回主菜单</span>
+        </footer>
+      </div>
+    </section>
+
+    <!-- ==================== BESTIARY ==================== -->
+    <section id="bestiary-overlay" class="overlay bestiary-overlay is-hidden" aria-label="敌人图鉴">
+      <div class="bestiary-shell">
+        <header class="bestiary-head">
+          <div><span class="micro-label">HOSTILE ARCHIVE // FIELD INTEL</span><h2>敌意图鉴</h2></div>
+          <button id="btn-bestiary-close" class="settings-close" type="button" aria-label="关闭图鉴"><span>ESC</span><b>×</b></button>
+        </header>
+        <div class="bestiary-toolbar">
+          <div id="bestiary-filters" class="bestiary-filters" role="tablist">
+            <button class="is-active" type="button" data-bestiary-filter="all" aria-selected="true">全部</button>
+            <button type="button" data-bestiary-filter="lab" aria-selected="false">生物实验室</button>
+            <button type="button" data-bestiary-filter="military" aria-selected="false">军事安保</button>
+            <button type="button" data-bestiary-filter="robot" aria-selected="false">机械设施</button>
+          </div>
+          <span class="bestiary-count"><b id="bestiary-count">0</b> 个已记录目标</span>
+        </div>
+        <div id="bestiary-grid" class="bestiary-grid"></div>
+      </div>
+    </section>
+
+    <!-- ==================== ARMORY ==================== -->
+    <section id="shop-overlay" class="overlay shop-overlay is-hidden" aria-label="军械库">
+      <div class="shop-shell">
+        <header class="shop-header">
+          <div class="shop-title">
+            <div class="shop-terminal-icon" aria-hidden="true"><i></i><i></i><i></i></div>
+            <div>
+              <span class="micro-label">ARMORY TERMINAL // K-07 AUTHENTICATED</span>
+              <h2>战术军械库</h2>
+            </div>
+          </div>
+          <div class="shop-balance">
+            <span>可用信用点</span>
+            <div><i class="coin-mark">C</i><strong id="shop-credits">0</strong><em>CR</em></div>
+          </div>
+          <button id="shop-close" class="close-btn" type="button" aria-label="关闭军械库">
+            <span>返回战场</span><b>ESC</b><i aria-hidden="true">×</i>
+          </button>
+        </header>
+
+        <div class="shop-body">
+          <section class="market-panel">
+            <section id="campaign-upgrade-section" class="campaign-upgrade-section is-hidden">
+              <div class="section-head">
+                <div><span class="section-index">00</span><h3>战术属性</h3></div>
+                <p>战役模式 · 仅在商店终端提供</p>
+              </div>
+              <div id="campaign-upgrade-list" class="campaign-upgrade-list"></div>
+            </section>
+            <div class="section-head">
+              <div><span class="section-index">01</span><h3>武器平台</h3></div>
+              <p>买断后永久解锁，可携带五把武器进入战场。</p>
+            </div>
+            <div id="weapon-list" class="weapon-list"></div>
+            <div class="supply-strip">
+              <div class="supply-ic" aria-hidden="true">+</div>
+              <div class="supply-copy"><b>战地医疗包</b><span>立即恢复 60 点生命值</span></div>
+              <div class="supply-hp"><span id="shop-hp">100 / 100</span></div>
+              <button id="btn-buy-medkit" class="btn btn-buy btn-sm" type="button">90 CR</button>
+            </div>
+          </section>
+
+          <section class="bench-panel">
+            <div class="section-head">
+              <div><span class="section-index">02</span><h3>武器改装台</h3></div>
+              <p>改装仅作用于当前武器。</p>
+            </div>
+            <div class="bench-current">
+              <div class="bench-weapon-art" id="bench-weapon-art" aria-hidden="true"></div>
+              <div>
+                <span id="bench-code" class="micro-label">M9-K // SIDEARM</span>
+                <h3 id="bench-name">制式手枪</h3>
+                <p id="bench-desc">可靠、轻便、永不缺席的制式副武器。</p>
+              </div>
+              <div class="bench-dps">
+                <span>理论 DPS</span>
+                <b id="bench-dps">115</b>
+              </div>
+            </div>
+            <div id="mod-grid" class="mod-grid"></div>
+            <div class="bench-note"><span>i</span> 弹夹 / 枪管 / 瞄准镜 / 枪托的改装效果会实时计入武器数据。</div>
+            <div class="grenade-market">
+              <div class="grenade-market-head">
+                <div><span class="section-index">03</span><h3>投掷装备</h3></div>
+                <p id="grenade-shop-help">Q 投掷 · E 切换</p>
+              </div>
+              <div id="grenade-list" class="grenade-list"></div>
+            </div>
+          </section>
+        </div>
+
+        <footer class="shop-footer">
+          <span><kbd>B</kbd> 或 <kbd>ESC</kbd> 返回战场 · 打开终端时行动暂停</span>
+          <span id="shop-help">Q 投掷 · E 切换 · 滚轮查看全部补给</span>
+          <span class="shop-status"><i></i>LINK STABLE</span>
+        </footer>
+      </div>
+    </section>
+
+    <!-- ==================== TALENT TREE ==================== -->
+    <section id="talent-overlay" class="overlay talent-overlay is-hidden" aria-label="干员科技树">
+      <div class="talent-shell">
+        <header class="talent-header">
+          <div class="talent-title">
+            <div class="talent-terminal-icon" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+            <div>
+              <span class="micro-label">NEURAL MATRIX // K-07 SYNAPTIC LINK</span>
+              <h2>干员科技树</h2>
+            </div>
+          </div>
+          <div class="talent-points-box">
+            <span>可用天赋点</span>
+            <div><strong id="talent-points">0</strong><em>TP</em></div>
+          </div>
+          <button id="talent-close" class="close-btn" type="button" aria-label="关闭科技树">
+            <span>返回战场</span><b>ESC</b><i aria-hidden="true">×</i>
+          </button>
+        </header>
+
+        <div class="talent-body">
+          <aside class="talent-sidebar">
+            <div class="talent-agent">
+              <div class="talent-avatar">K</div>
+              <div class="talent-agent-name">
+                <span>COMBAT LEVEL</span>
+                <b>LV.<em id="talent-level">01</em></b>
+              </div>
+              <div class="talent-agent-spent">
+                <span>已投入</span>
+                <b id="talent-spent">0 TP</b>
+              </div>
+            </div>
+            <div class="talent-progress-copy">
+              <div><span>天赋解锁</span><b id="talent-unlocked-count">0 / 9</b></div>
+              <div><span>累计获得</span><b id="talent-earned">0 TP</b></div>
+            </div>
+            <div class="talent-bonuses">
+              <div class="talent-bonus-head"><span>ACTIVE AUGMENTS</span><i></i></div>
+              <div id="talent-bonus-list" class="talent-bonus-list">
+                <span class="talent-bonus-empty">尚未接入任何强化。</span>
+              </div>
+            </div>
+            <p class="talent-note">战斗等级每次提升获得 <b>1 天赋点</b>。天赋每局重置，强力天赋占用更多点数；整棵科技树共需 <b id="talent-total-cost">75</b> 点，<b>等级 76 即可全部解锁</b>，不会超过可获得的点数。</p>
+            <div class="talent-signal"><i></i><span>SYNAPTIC LINK STABLE</span><b>NO CAP</b></div>
+          </aside>
+
+          <section class="talent-tree-wrap">
+            <div class="talent-tree-head">
+              <div><span class="section-index">01</span><h3>强化分支</h3></div>
+              <p>点击节点解锁 · 高阶节点需要前置天赋</p>
+            </div>
+            <div id="talent-tree" class="talent-tree"></div>
+            <div class="talent-tree-legend">
+              <span><i class="legend-node unlocked"></i>已解锁</span>
+              <span><i class="legend-node available"></i>可解锁</span>
+              <span><i class="legend-node locked"></i>未满足条件</span>
+              <span class="legend-spacer"></span>
+              <span>全树总消耗 <b>75 TP</b> · 每级 +1 TP</span>
+            </div>
+          </section>
+        </div>
+
+        <footer class="talent-footer">
+          <span><kbd>T</kbd> 或 <kbd>ESC</kbd> 返回战场 · 打开终端时行动暂停</span>
+          <span>剩余可用点数在升级后自动增加</span>
+          <span class="shop-status"><i></i>NEURAL LINK STABLE</span>
+        </footer>
+      </div>
+    </section>
+
+    <!-- ==================== TRAINING ==================== -->
+    <section id="training-panel" class="training-panel is-hidden" aria-label="训练场控制台">
+      <header class="training-head">
+        <span>TRAINING RANGE // K-07</span>
+        <b>沙袋测试</b>
+      </header>
+      <div class="training-readout">
+        <div><span>实时 DPS</span><b id="training-dps">0</b></div>
+        <div><span>累计伤害</span><b id="training-total">0</b></div>
+        <div><span>沙袋状态</span><b id="training-dummy-hp">∞</b></div>
+      </div>
+      <div class="training-actions">
+        <button type="button" data-training-action="all-talents">全部科技</button>
+        <button type="button" data-training-action="clear-talents">清空科技</button>
+        <button type="button" data-training-action="max-mods">满改装</button>
+        <button type="button" data-training-action="clear-mods">清空改装</button>
+        <button type="button" data-training-action="reset-dummy">重置沙袋</button>
+        <button type="button" data-training-action="exit">退出训练</button>
+      </div>
+      <p class="training-hint">T 科技树 · B 军械库 · 1—5 切换武器 · U 自动瞄准</p>
+    </section>
+
+    <!-- ==================== STORY ==================== -->
+    <section id="story-overlay" class="story-overlay is-hidden" aria-label="剧情模式">
+      <div class="story-frame">
+        <div id="story-bg" class="story-bg"></div>
+        <div class="story-vignette"></div>
+        <header class="story-top">
+          <div class="story-file">
+            <span>ESCAPE FILE // K-07</span>
+            <b id="story-chapter">序章 · 收容失效</b>
+          </div>
+          <div class="story-top-right">
+            <span id="story-progress">01 / 24</span>
+            <button id="btn-story-exit" type="button">退出剧情</button>
+          </div>
+        </header>
+        <div id="story-portrait" class="story-portrait"></div>
+        <div id="story-location" class="story-location">B-07 隔离室</div>
+        <div class="story-logue">
+          <div class="story-speaker-row">
+            <span id="story-speaker">零</span>
+            <em id="story-role">FACILITY INTELLIGENCE</em>
+          </div>
+          <p id="story-text"></p>
+          <div id="story-choices" class="story-choices"></div>
+          <span id="story-continue" class="story-continue">点击继续</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== PAUSE ==================== -->
+    <section id="pause-overlay" class="overlay pause-overlay is-hidden" aria-label="行动暂停">
+      <div class="pause-card">
+        <div class="pause-glyph" aria-hidden="true"><i></i><i></i></div>
+        <span class="micro-label">TACTICAL HOLD // SIMULATION PAUSED</span>
+        <h2>行动暂停</h2>
+        <p>收容区的时间暂时凝固。调整呼吸，然后继续深入。</p>
+        <div class="pause-stats">
+          <div><span id="pause-wave-label">当前波次</span><b id="pause-wave">01</b></div>
+          <div><span>战斗等级</span><b id="pause-level">01</b></div>
+          <div><span>累计击杀</span><b id="pause-kills">0</b></div>
+        </div>
+        <div class="pause-actions">
+          <button id="btn-resume" class="btn btn-primary" type="button">继续行动 <kbd>ESC</kbd></button>
+          <button id="btn-pause-restart" class="btn btn-ghost" type="button">重新部署</button>
+          <button id="btn-pause-menu" class="btn btn-text" type="button">返回主界面</button>
+        </div>
+        <div id="pause-hint" class="pause-hint">提示：R 换弹 · Q 手雷 / E 切换 · B 军械库 · T 科技树 · F 技能 · Shift 冲刺</div>
+      </div>
+    </section>
+
+    <!-- ==================== SETTINGS ==================== -->
+    <section id="settings-overlay" class="overlay settings-overlay is-hidden" aria-label="行动设置">
+      <div class="settings-shell" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+        <header class="settings-head">
+          <div class="settings-title-wrap">
+            <span class="micro-label">SYSTEM CONTROL // K-07</span>
+            <h2 id="settings-title">行动设置</h2>
+          </div>
+          <div class="settings-head-actions">
+            <span class="settings-session">LIVE SESSION <i></i></span>
+            <button id="btn-settings-close" class="settings-close" type="button" aria-label="关闭设置">
+              <span>ESC</span><b>×</b>
+            </button>
+          </div>
+        </header>
+
+        <div class="settings-main">
+          <nav class="settings-tabs" role="tablist" aria-label="设置分类">
+            <button class="settings-tab is-active" type="button" role="tab" aria-selected="true" data-settings-tab="audio">
+              <span>01</span><b>音效</b><small>AUDIO</small>
+            </button>
+            <button class="settings-tab" type="button" role="tab" aria-selected="false" data-settings-tab="graphics">
+              <span>02</span><b>画质</b><small>GRAPHICS</small>
+            </button>
+            <button class="settings-tab" type="button" role="tab" aria-selected="false" data-settings-tab="keys">
+              <span>03</span><b>键位介绍</b><small>CONTROLS</small>
+            </button>
+            <button class="settings-tab" type="button" role="tab" aria-selected="false" data-settings-tab="guide">
+              <span>04</span><b>玩法说明</b><small>FIELD GUIDE</small>
+            </button>
+            <button class="settings-tab" type="button" role="tab" aria-selected="false" data-settings-tab="developer">
+              <span>05</span><b>开发者</b><small>DEVELOPER</small>
+            </button>
+          </nav>
+
+          <div class="settings-content">
+            <section class="settings-panel is-active" data-settings-panel="audio" role="tabpanel">
+              <div class="settings-section-head">
+                <span class="micro-label">01 // AUDIO MIX</span>
+                <h3>音效与音乐</h3>
+                <p>分别调整音效与 BGM 的音量；全部静音仍可通过顶栏按钮或 <kbd>M</kbd> 快速切换。</p>
+              </div>
+              <button id="settings-mute" class="settings-mute" type="button" aria-pressed="false">
+                <span class="settings-mute-dot"><i></i></span>
+                <span><b id="settings-mute-label">声音已开启</b><small>MASTER OUTPUT</small></span>
+                <em>M</em>
+              </button>
+              <div class="settings-sliders">
+                <label class="settings-slider" for="settings-sfx">
+                  <span class="settings-slider-copy"><b>音效音量</b><small>枪声 · 技能 · 命中 · 环境反馈</small></span>
+                  <input id="settings-sfx" type="range" min="0" max="100" step="1" value="100" aria-label="音效音量">
+                  <b id="settings-sfx-value" class="settings-slider-value">100%</b>
+                </label>
+                <label class="settings-slider" for="settings-music">
+                  <span class="settings-slider-copy"><b>BGM 音量</b><small>主菜单 · 战斗 · Boss · 休整</small></span>
+                  <input id="settings-music" type="range" min="0" max="100" step="1" value="100" aria-label="BGM 音量">
+                  <b id="settings-music-value" class="settings-slider-value">100%</b>
+                </label>
+              </div>
+              <div class="settings-note"><i>i</i><span>战斗 BGM 会随战斗状态切换；进入设置、暂停或商店时会淡出。音量会自动保存。</span></div>
+            </section>
+
+            <section class="settings-panel" data-settings-panel="graphics" role="tabpanel">
+              <div class="settings-section-head">
+                <span class="micro-label">02 // RENDER QUALITY</span>
+                <h3>画质档位</h3>
+                <p>降低渲染倍率可以提升帧率；画质即时生效并自动保存。</p>
+              </div>
+              <div class="quality-grid">
+                <button class="quality-card" type="button" data-quality="low">
+                  <span>LOW</span><b>流畅</b><small>1.0× 渲染<br>关闭颗粒层</small>
+                </button>
+                <button class="quality-card" type="button" data-quality="medium">
+                  <span>MED</span><b>标准</b><small>1.5× 渲染<br>平衡清晰度</small>
+                </button>
+                <button class="quality-card" type="button" data-quality="high">
+                  <span>HIGH</span><b>高清</b><small>最高 2.0× 渲染<br>全部环境细节</small>
+                </button>
+              </div>
+              <div id="settings-quality-note" class="settings-note"><i>i</i><span>当前：高清 · 最高 2.0× 渲染上限，保留颗粒与扫描线。</span></div>
+              <div class="settings-render-readout">
+                <span>CANVAS RENDER <b id="settings-render-scale">DPR 2.0×</b></span>
+                <span>画质设置立即应用</span>
+              </div>
+            </section>
+
+            <section class="settings-panel" data-settings-panel="keys" role="tabpanel">
+              <div class="settings-section-head">
+                <span class="micro-label">03 // COMMAND INPUT</span>
+                <h3>键位介绍</h3>
+                <p>左侧为通用操作；部分操作仅在对应模式中可用。</p>
+              </div>
+              <div class="settings-key-groups">
+                <div class="settings-key-group">
+                  <h4>移动与战斗</h4>
+                  <div class="settings-key-row"><span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></span><b>移动 / 方向键同样可用</b></div>
+                  <div class="settings-key-row"><span><kbd>鼠标</kbd></span><b>瞄准</b></div>
+                  <div class="settings-key-row"><span><kbd>左键</kbd></span><b>射击 / 按住连发</b></div>
+                  <div class="settings-key-row"><span><kbd>右键</kbd></span><b>双持副手射击（无尽）</b></div>
+                  <div class="settings-key-row"><span><kbd>R</kbd></span><b>换弹</b></div>
+                  <div class="settings-key-row"><span><kbd>1</kbd>—<kbd>5</kbd></span><b>切换武器</b></div>
+                  <div class="settings-key-row"><span><kbd>Shift</kbd></span><b>战术冲刺 / 闪避</b></div>
+                  <div class="settings-key-row"><span><kbd>SPACE</kbd></span><b>角色主动技能</b></div>
+                  <div class="settings-key-row"><span><kbd>Q</kbd></span><b>投掷当前手雷</b></div>
+                  <div class="settings-key-row"><span><kbd>G</kbd></span><b>切换手雷</b></div>
+                </div>
+                <div class="settings-key-group">
+                  <h4>交互与系统</h4>
+                  <div class="settings-key-row"><span><kbd>E</kbd></span><b>无尽切换手雷 / 闯关搜索补给</b></div>
+                  <div class="settings-key-row"><span><kbd>F</kbd></span><b>无尽部署炮塔 / 闯关交互</b></div>
+                  <div class="settings-key-row"><span><kbd>B</kbd><kbd>Tab</kbd></span><b>军械库（闯关仅限商店终端）</b></div>
+                  <div class="settings-key-row"><span><kbd>T</kbd></span><b>科技树（仅无尽）</b></div>
+                  <div class="settings-key-row"><span><kbd>N</kbd></span><b>休整期提前开波（无尽）</b></div>
+                  <div class="settings-key-row"><span><kbd>M</kbd></span><b>全部声音静音 / 恢复</b></div>
+                  <div class="settings-key-row"><span><kbd>Esc</kbd></span><b>暂停 / 关闭当前界面</b></div>
+                </div>
+              </div>
+            </section>
+
+            <section class="settings-panel" data-settings-panel="guide" role="tabpanel">
+              <div class="settings-section-head">
+                <span class="micro-label">04 // FIELD GUIDE</span>
+                <h3>玩法说明</h3>
+                <p>四种模式共享移动、射击、手雷、装填与冲刺手感；训练场额外提供全武器、自由科技与沙袋 DPS 测试。</p>
+              </div>
+              <div class="guide-mode-grid">
+                <article class="guide-mode-card">
+                  <span>01 // ENDLESS</span><h4>无尽模式</h4>
+                  <p>在固定实验室中抵御一波波实验体，每 3 波遭遇指挥官。击杀与升级获得天赋点，可在 26 节点五分支科技树中接入双持、护盾、炮塔、哨戒协议与爆破协议。</p>
+                  <small>目标：刷新最高波次</small>
+                </article>
+                <article class="guide-mode-card">
+                  <span>02 // CAMPAIGN</span><h4>闯关模式</h4>
+                  <p>穿过三张折返式实验室地图，搜索箱柜、在独立补给站购买强化，并击败每张地图终点前的区域 Boss。Boss 战期间房间会封锁。</p>
+                  <small>目标：击败三名指挥官并通关</small>
+                </article>
+                <article class="guide-mode-card">
+                  <span>03 // ROGUE</span><h4>肉鸽无尽</h4>
+                  <p>每层随机重构 7—9 个房间，敌人会随深度加速强化；每 3 层出现随机区域守卫。商店与搜索是跨层成长的核心。</p>
+                  <small>目标：尽可能深入随机实验层</small>
+                </article>
+              </div>
+              <div class="guide-rules">
+                <div><b>补给</b><span>闯关 / 肉鸽按 E 搜索箱柜约 3 秒，离开范围会中断；补给站内按 F 打开终端。</span></div>
+                <div><b>Boss</b><span>Boss 房入口显示能量屏障；击败区域 Boss 才会解除封锁并解锁电梯。</span></div>
+                <div><b>角色</b><span>主菜单「角色」可更换干员；阿兰默认解锁，其余使用角色代币购买。主动技能按空格键，进入下一局生效。</span></div>
+              <div><b>生存</b><span>生命归零即失败；若已接入紧急重构，会在原地进入 5 秒重构倒计时。</span></div>
+              </div>
+            </section>
+
+            <section class="settings-panel" data-settings-panel="developer" role="tabpanel">
+              <div class="settings-section-head">
+                <span class="micro-label">05 // DEVELOPER ACCESS</span>
+                <h3>开发者模式</h3>
+                <p>输入访问密码以启用本地调试增益。启用后立即生效，设置会保存在当前浏览器。</p>
+              </div>
+              <div id="developer-card" class="developer-card">
+                <div class="developer-overview">
+                  <span class="developer-emblem">DEV</span>
+                  <div><b id="dev-mode-state">开发者模式未启用</b><small>LOCAL OVERRIDE // K-07 DEBUG CHANNEL</small></div>
+                  <em id="dev-mode-badge">OFF</em>
+                </div>
+                <div class="developer-form">
+                  <label for="dev-password">访问密码</label>
+                  <div class="developer-input-row">
+                    <input id="dev-password" type="password" autocomplete="off" spellcheck="false" maxlength="32" placeholder="输入开发者密码">
+                    <button id="btn-dev-enable" class="btn btn-primary" type="button">验证并启用</button>
+                  </div>
+                  <p id="dev-message">输入密码后解锁全部武器、科技树、角色与无限资源。</p>
+                </div>
+                <ul class="developer-perks">
+                  <li><b>全部武器</b><span>所有枪械与改装 MK IV</span></li>
+                  <li><b>全部科技树</b><span>26 项天赋全部接入</span></li>
+                  <li><b>无限弹药</b><span>射击不消耗弹匣</span></li>
+                  <li><b>无需换弹</b><span>跳过装填流程</span></li>
+                  <li><b>无限视野</b><span>关闭闯关战争迷雾</span></li>
+                  <li><b>全部角色</b><span>无需代币直接解锁</span></li>
+                  <li><b>投掷物无限</b><span>手雷不消耗库存</span></li>
+                  <li><b>生命锁定</b><span>血条不变 · 受击反馈照常</span></li>
+                </ul>
+                <div class="developer-foot">
+                  <span>开发者状态保存在本机 · 不影响正常纪录</span>
+                  <button id="btn-dev-disable" class="btn btn-ghost" type="button" disabled>关闭能力增益</button>
+                </div>
+              </div>
+            </section>
+          </div>
+        </div>
+
+        <footer class="settings-foot">
+          <span id="settings-foot-hint"><kbd>ESC</kbd> 返回战斗 · 所有设置自动保存</span>
+          <button id="btn-settings-back" class="btn btn-primary" type="button">返回战斗</button>
+        </footer>
+      </div>
+    </section>
+
+    <!-- ==================== GAME OVER ==================== -->
+    <section id="gameover-overlay" class="overlay gameover-overlay is-hidden" aria-label="行动失败">
+      <div class="gameover-card">
+        <div class="failure-code">SIGNAL LOST <span>// K-07</span></div>
+        <div class="dead-cross" aria-hidden="true"><i></i><i></i></div>
+        <span class="micro-label">MISSION FAILURE // 生命体征归零</span>
+        <h2>行动失败</h2>
+        <p class="gameover-copy">实验区重新归于寂静。但收容核心仍在等待下一位干员。</p>
+        <div class="gameover-stats">
+          <div class="go-stat"><span id="go-wave-label">抵达波次</span><b id="go-wave">01</b></div>
+          <div class="go-stat"><span>战斗等级</span><b id="go-level">01</b></div>
+          <div class="go-stat"><span>消灭目标</span><b id="go-kills">0</b></div>
+          <div class="go-stat"><span>获得信用点</span><b id="go-credits">0</b></div>
+        </div>
+        <div class="gameover-actions">
+          <button id="btn-retry" class="btn btn-primary" type="button"><span>重新部署</span><small>REDEPLOY</small></button>
+          <button id="btn-menu" class="btn btn-ghost" type="button">返回主界面</button>
+        </div>
+        <div class="gameover-foot"><span id="go-best">最高纪录 WAVE 00</span><span>本次行动的装备、等级与天赋不会保留</span></div>
+      </div>
+    </section>
+
+    <!-- ==================== CAMPAIGN COMPLETE ==================== -->
+    <section id="campaign-complete-overlay" class="overlay campaign-complete-overlay is-hidden" aria-label="闯关完成">
+      <div class="campaign-complete-card">
+        <div class="campaign-complete-kicker">CAMPAIGN COMPLETE <span>// K-07 BREACH</span></div>
+        <div class="campaign-complete-mark" aria-hidden="true"><i></i><i></i><i></i></div>
+        <span class="micro-label">THREE SECTORS CLEARED // 收容核心已突破</span>
+        <h2>闯关完成</h2>
+        <p>三层实验区全部肃清，终点电梯已经抵达地表。你带回了比信用点更重要的东西。</p>
+        <div class="campaign-complete-stats">
+          <div><span>总用时</span><b id="campaign-time">00:00</b></div>
+          <div><span>消灭目标</span><b id="campaign-kills">0</b></div>
+          <div><span>搜索地点</span><b id="campaign-searches">0</b></div>
+          <div><span>获得信用点</span><b id="campaign-credits">0</b></div>
+        </div>
+        <div class="campaign-complete-bosses">
+          <span>已击破</span>
+          <b>实验室主任</b><i></i><b>士官长</b><i></i><b>清道夫 X-7</b>
+        </div>
+        <div class="campaign-complete-meta"><span id="campaign-grade">评价：S</span><span id="campaign-record">最佳用时：--:--</span></div>
+        <div id="campaign-tokenline" class="campaign-tokenline">角色代币 · 本难度里程碑已领取</div>
+        <div class="campaign-complete-actions">
+          <button id="btn-campaign-again" class="btn btn-primary" type="button">再次闯关</button>
+          <button id="btn-campaign-menu" class="btn btn-ghost" type="button">返回主界面</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="game.js"></script>
+</body>
+</html>

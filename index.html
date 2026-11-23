@@ -337,6 +337,11 @@
                 <span>图鉴</span>
               </button>
             </div>
+            <button id="btn-multiplayer" class="mp-entry" type="button">
+              <span class="mp-entry-mark">LAN</span>
+              <span class="mp-entry-copy"><b>局域网联机</b><small>PVE 合作 / PVP 对战 · 2—8 人</small></span>
+              <span class="mp-entry-arrow">↗</span>
+            </button>
             <button id="btn-clear-checkpoint" class="menu-checkpoint-clear is-hidden" type="button">放弃无尽进度</button>
             <div id="menu-audio-hint" class="menu-audio-hint"><i></i><span>首次点击后开启主菜单 BGM</span><em>CLICK TO ARM AUDIO</em></div>
 
@@ -400,7 +405,7 @@
         <footer class="menu-footer">
           <span><i class="live-dot"></i>OFFLINE SIMULATION · 本地运行</span>
           <span>鼠标控制准星 · 左键单击 / 长按射击</span>
-          <span>BUILD 6.0.1</span>
+          <span>BUILD 8.0.0</span>
         </footer>
       </div>
     </section>
@@ -650,6 +655,89 @@
       </div>
     </section>
 
+    <!-- ==================== MULTIPLAYER LOBBY ==================== -->
+    <section id="mp-lobby-overlay" class="mp-overlay is-hidden" aria-label="局域网联机大厅">
+      <div class="mp-lobby-shell">
+        <header class="mp-lobby-head">
+          <div><span>LAN PROTOCOL // 2—8 OPERATIVES</span><h2>局域网联机</h2></div>
+          <div class="mp-lobby-head-right">
+            <span id="mp-server-status" class="mp-server-status is-offline">未连接</span>
+            <button id="btn-mp-close" type="button">返回主菜单</button>
+          </div>
+        </header>
+        <p class="mp-lobby-lead">同一局域网内的玩家打开房主地址加入房间。房主负责开局和规则设置；所有人准备后由房主开始。</p>
+        <div class="mp-lobby-grid">
+          <section class="mp-panel mp-connect-panel">
+            <h3><span>01</span> 连接</h3>
+            <label>呼叫代号<input id="mp-name" type="text" maxlength="20" value="干员" autocomplete="off"></label>
+            <label>房间频道<input id="mp-room" type="text" maxlength="20" value="LABZERO" autocomplete="off"></label>
+            <div class="mp-connect-actions">
+              <button id="btn-mp-connect" class="btn btn-primary" type="button">加入频道</button>
+              <button id="btn-mp-leave" class="btn btn-ghost" type="button" disabled>离开</button>
+            </div>
+            <p class="mp-hint" id="mp-connect-hint">通过局域网服务器打开游戏后即可联机。</p>
+          </section>
+          <section class="mp-panel mp-setup-panel">
+            <h3><span>02</span> 作战协议</h3>
+            <div class="mp-mode-tabs">
+              <button class="is-active" type="button" data-mp-mode="pve"><b>PVE</b><small>合作生存</small></button>
+              <button type="button" data-mp-mode="pvp"><b>PVP</b><small>玩家对战</small></button>
+            </div>
+            <div id="mp-pve-options" class="mp-config-row">
+              <span>PVE 类型</span>
+              <div class="mp-pill-tabs">
+                <button class="is-active" type="button" data-mp-pve="normal">普通</button>
+                <button type="button" data-mp-pve="boss">Boss 战</button>
+              </div>
+            </div>
+            <div id="mp-pvp-options" class="mp-config-row is-offline">
+              <span>回合数</span>
+              <div class="mp-round-stepper"><button type="button" data-mp-rounds="-1">−</button><b id="mp-round-count">5</b><button type="button" data-mp-rounds="1">+</button></div>
+            </div>
+            <p class="mp-hint" id="mp-config-hint">普通：无尽波次、人数强化与团队救援。Boss：连续 Boss 循环，强度递增。</p>
+            <div class="mp-ready-row">
+              <button id="btn-mp-ready" class="btn btn-ghost" type="button" disabled>准备就绪</button>
+              <button id="btn-mp-start" class="btn btn-primary" type="button" disabled>开始作战</button>
+            </div>
+          </section>
+          <section class="mp-panel mp-roster-panel">
+            <h3><span>03</span> 作战小队 <em id="mp-player-count">0 / 8</em></h3>
+            <div id="mp-player-list" class="mp-player-list"></div>
+            <p class="mp-hint">房主会显示皇冠标记。离线成员会自动标记。</p>
+          </section>
+        </div>
+        <footer class="mp-lobby-foot"><span id="mp-lobby-tip">等待加入房间…</span><span>LAN ONLY · 无需互联网</span></footer>
+      </div>
+    </section>
+
+    <!-- ==================== MULTIPLAYER GAME ==================== -->
+    <section id="mp-game-overlay" class="mp-game-overlay is-hidden" aria-label="联机战斗">
+      <canvas id="mp-canvas"></canvas>
+      <div class="mp-hud">
+        <div class="mp-top-card">
+          <span id="mp-mission-kicker">LAN // PVE</span>
+          <h3 id="mp-mission-title">收容协议</h3>
+          <div class="mp-mission-state"><b id="mp-mission-state">等待部署</b><em id="mp-team-damage">总伤害 0</em></div>
+        </div>
+        <div class="mp-local-card">
+          <div class="mp-local-head"><b id="mp-local-name">干员</b><span id="mp-local-character">ALAN</span></div>
+          <div class="mp-bar hp"><i id="mp-local-hp-fill"></i></div>
+          <div class="mp-local-stats"><span>HP <b id="mp-local-hp">100 / 100</b></span><span>弹药 <b id="mp-local-ammo">30 / 30</b></span></div>
+          <div class="mp-local-stats"><span>信用点 <b id="mp-local-credits">0</b></span><span>科技点 <b id="mp-local-tech">0</b></span></div>
+          <div class="mp-upgrade-row"><span>1 伤害 <b id="mp-up-damage">0</b></span><span>2 护甲 <b id="mp-up-armor">0</b></span><span>3 射速 <b id="mp-up-rate">0</b></span></div>
+        </div>
+        <div class="mp-roster-card">
+          <div class="mp-roster-head"><span>作战小队</span><b id="mp-alive-count">0 ALIVE</b></div>
+          <div id="mp-game-roster" class="mp-game-roster"></div>
+          <div class="mp-team-damage"><span>团队总伤害</span><b id="mp-team-damage-big">0</b></div>
+        </div>
+        <div id="mp-boss-bar" class="mp-boss-bar is-hidden"><span id="mp-boss-name">BOSS</span><div><i id="mp-boss-fill"></i></div><b id="mp-boss-hp">0 / 0</b></div>
+        <div class="mp-bottom-hint"><span>WASD 移动 · 左键射击 · R 换弹 · E 救援 · 1/2/3 升级 · ESC 离开</span><b id="mp-net-status">LAN · HOST</b></div>
+        <div id="mp-center-message" class="mp-center-message is-hidden"></div>
+        <div id="mp-result-panel" class="mp-result-panel is-hidden"></div>
+      </div>
+    </section>
+
     <!-- ==================== PAUSE ==================== -->
     <section id="pause-overlay" class="overlay pause-overlay is-hidden" aria-label="行动暂停">
       <div class="pause-card">
@@ -794,7 +882,7 @@
               <div class="settings-section-head">
                 <span class="micro-label">04 // FIELD GUIDE</span>
                 <h3>玩法说明</h3>
-                <p>四种模式共享移动、射击、手雷、装填与冲刺手感；训练场额外提供全武器、自由科技与沙袋 DPS 测试。</p>
+                <p>五种模式共享移动、射击、手雷、装填与冲刺手感；剧情模式采用视觉小说式流程，训练场额外提供全武器、自由科技与沙袋 DPS 测试。</p>
               </div>
               <div class="guide-mode-grid">
                 <article class="guide-mode-card">
@@ -918,5 +1006,6 @@
   </main>
 
   <script src="game.js"></script>
+  <script src="multiplayer.js"></script>
 </body>
 </html>

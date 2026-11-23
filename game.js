@@ -4547,6 +4547,14 @@
 
   function updateBestUI() {
     const diff = getDifficultyConfig();
+    if (game.menuMode === 'story') {
+      setText(dom.recordLabel, '剧情档案');
+      setText(dom.bestWave, '零号逃逸');
+      if (dom.bestCopy) dom.bestCopy.textContent = '视觉小说 · 3 场战斗 · 关键选择 · 4 种结局';
+      if (dom.bestBreakdown) dom.bestBreakdown.textContent = '阿兰 · 林澈 · 罗恩 · 零 // ESCAPE FROM LAB ZERO';
+      setText(dom.goBest, '剧情模式 · 零号逃逸');
+      return;
+    }
     if (game.menuMode === 'rogue') {
       const byDifficulty = game.rogueRecord?.byDifficulty || {};
       const bestFloor = byDifficulty[diff.id]?.bestFloor || 0;
@@ -6126,15 +6134,18 @@
     document.body.classList.toggle('campaign-mode', campaign);
     document.body.classList.toggle('endless-mode', !campaign);
     document.body.classList.toggle('rogue-mode', rogue);
-    dom.btnTalents.disabled = campaign;
-    dom.btnTalents.classList.toggle('is-hidden', campaign);
+    dom.btnTalents.disabled = campaign || story;
+    dom.btnTalents.classList.toggle('is-hidden', campaign || story);
     dom.btnSpeed.classList.toggle('is-hidden', campaign || game.runMode !== 'endless');
-    dom.btnShop.title = campaign ? '战役军械库仅在商店终端开放' : '打开军械库 (B)';
+    dom.btnShop.classList.toggle('is-hidden', story);
+    dom.btnShop.title = campaign ? '战役军械库仅在商店终端开放' : story ? '剧情模式不开放军械库' : '打开军械库 (B)';
     dom.grenadeSwitchHelp.textContent = campaign ? 'G 切换' : 'E 切换';
-    dom.pauseHint.textContent = campaign
-      ? '提示：R 换弹 · 空格 角色技能 · Q 手雷 / G 切换 · E 搜索(3s) · F 电梯 / 商店 · Shift 冲刺'
-      : '提示：R 换弹 · 空格 角色技能 · Q 手雷 / E 切换 · B 军械库 · T 科技树 · F 技能 · Shift 冲刺';
-    dom.fieldHint.textContent = campaign ? 'E 搜索(3s) · F 交互 · 空格 角色技能 · 视野受限' : '左键长按 · 连续射击 · 空格 角色技能';
+    dom.pauseHint.textContent = story
+      ? '提示：R 换弹 · 鼠标射击 · Q 手雷 / E 切换 · 1—5 切换武器 · Shift 冲刺'
+      : campaign
+        ? '提示：R 换弹 · 空格 角色技能 · Q 手雷 / G 切换 · E 搜索(3s) · F 电梯 / 商店 · Shift 冲刺'
+        : '提示：R 换弹 · 空格 角色技能 · Q 手雷 / E 切换 · B 军械库 · T 科技树 · F 技能 · Shift 冲刺';
+    dom.fieldHint.textContent = campaign ? 'E 搜索(3s) · F 交互 · 空格 角色技能 · 视野受限' : story ? '剧情战斗 · 预设装备 · 1—5 切换武器' : '左键长按 · 连续射击 · 空格 角色技能';
     setText(dom.hudDifficulty, getDifficultyConfig().name);
   }
 

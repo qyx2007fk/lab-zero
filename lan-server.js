@@ -14,6 +14,7 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
+const { Match } = require('./server-authority');
 
 const ROOT = __dirname;
 const PORT = Number(process.env.PORT || process.argv[2] || 8765);
@@ -98,6 +99,7 @@ function broadcast(room, type, payload, exceptId = null) {
   for (const player of room.players.values()) {
     if (player.id === exceptId) continue;
     if (!player.res || player.res.writableEnded) continue;
+    if (type === 'snapshot' && player.res.writableLength > 256 * 1024) continue;
     try {
       player.res.write(packet);
     } catch (_) {
@@ -137,12 +139,13 @@ function leaveRoom(room, playerId, reason = 'left') {
       broadcast(room, 'host-changed', { hostId: next.id });
     }
   }
+  if (room.match) room.match.removePlayer(playerId);
   if (room.players.size === 0) {
+    stopMatch(room);
     rooms.delete(room.id);
     return;
   }
   broadcast(room, 'player-left', { id: playerId, name: player.name, reason });
-  if (room.started) broadcast(room, 'host-lost', { id: playerId });
   broadcastLobby(room);
 }
 
@@ -153,6 +156,37 @@ function cleanupRoom(room) {
       leaveRoom(room, player.id, 'offline');
     }
   }
+  if (room.players.size === 0) stopMatch(room);
+}
+
+function stopMatch(room) {
+  if (!room) return;
+  if (room.matchTimer) clearInterval(room.matchTimer);
+  room.matchTimer = null;
+  room.match = null;
+}
+
+function startMatch(room) {
+  stopMatch(room);
+  const entries = [...room.players.values()].filter((entry) => entry.online).map((entry) => ({
+    id: entry.id, name: entry.name, character: entry.character,
+  }));
+  room.match = new Match(room.id, room.config, entries);
+  const interval = 1000 / 30;
+  room.matchTimer = setInterval(() => {
+    if (!room.match) return;
+    try {
+      room.match.update(interval / 1000);
+      const snap = room.match.snapshot();
+      broadcast(room, 'snapshot', snap);
+      if (room.match.result && !room.resultSent) {
+        room.resultSent = true;
+      }
+    } catch (error) {
+      console.error('[LAB ZERO authority]', room.id, error);
+    }
+  }, interval);
+  room.resultSent = false;
 }
 
 function normalizeConfig(input = {}) {
@@ -171,7 +205,7 @@ async function handleJoin(req, res) {
   const character = String(body.character || 'alan').slice(0, 24);
   let room = rooms.get(roomId);
   if (!room) {
-    room = { id: roomId, hostId: null, started: false, config: normalizeConfig(), players: new Map() };
+    room = { id: roomId, hostId: null, started: false, config: normalizeConfig(), players: new Map(), match: null, matchTimer: null };
     rooms.set(roomId, room);
   }
   if (room.started) return json(res, 409, { error: 'ROOM_IN_PROGRESS', message: '该房间正在战斗中' });
@@ -209,6 +243,9 @@ function handleEvents(req, res, url) {
     Connection: 'keep-alive',
     'X-Accel-Buffering': 'no',
   });
+  res.socket?.setNoDelay(true);
+  res.socket?.setKeepAlive(true, 15000);
+  res.flushHeaders?.();
   res.write('retry: 1200\n\n');
   player.res = res;
   player.online = true;
@@ -223,21 +260,7 @@ function handleEvents(req, res, url) {
     clearInterval(heartbeat);
     player.online = false;
     player.res = null;
-    if (room.started) {
-      if (room.hostId === playerId) {
-        room.started = false;
-        for (const entry of room.players.values()) entry.ready = false;
-        broadcast(room, 'host-lost', { id: playerId, name: player.name });
-        broadcast(room, 'end', { reason: '房主已离线' });
-        leaveRoom(room, playerId, 'offline');
-        broadcastLobby(room);
-      } else {
-        broadcast(room, 'player-left', { id: playerId, name: player.name, reason: 'offline' });
-        broadcastLobby(room);
-      }
-    } else {
-      leaveRoom(room, playerId, 'offline');
-    }
+    leaveRoom(room, playerId, 'offline');
   });
 }
 
@@ -275,27 +298,22 @@ async function handleAction(req, res) {
         id: entry.id, name: entry.name, character: entry.character, host: entry.id === room.hostId,
       })),
     };
+    startMatch(room);
     broadcast(room, 'start', start);
     return json(res, 200, { ok: true });
   }
   if (action === 'input') {
-    sendToHost(room, 'input', { id: playerId, input: payload }, playerId);
+    if (room.match) room.match.applyInput(playerId, payload || {});
     return json(res, 200, { ok: true });
   }
-  if (action === 'snapshot') {
-    if (room.hostId !== playerId) return json(res, 403, { error: 'NOT_HOST' });
-    broadcast(room, 'snapshot', payload, playerId);
-    return json(res, 200, { ok: true });
-  }
-  if (action === 'event') {
-    if (room.hostId !== playerId) return json(res, 403, { error: 'NOT_HOST' });
-    broadcast(room, payload.type || 'event', payload.data || {}, playerId);
-    return json(res, 200, { ok: true });
+  if (action === 'snapshot' || action === 'event') {
+    return json(res, 410, { error: 'SERVER_AUTHORITATIVE' });
   }
   if (action === 'end') {
     if (room.hostId !== playerId) return json(res, 403, { error: 'NOT_HOST' });
     room.started = false;
     for (const entry of room.players.values()) entry.ready = false;
+    stopMatch(room);
     broadcast(room, 'end', payload || {});
     broadcastLobby(room);
     return json(res, 200, { ok: true });
@@ -331,6 +349,8 @@ function serveStatic(req, res, url) {
 }
 
 const server = http.createServer(async (req, res) => {
+  req.socket?.setNoDelay(true);
+  req.socket?.setKeepAlive(true, 15000);
   const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
   try {
     if (url.pathname === '/api/mp/health') return json(res, 200, { ok: true, rooms: rooms.size, uptime: process.uptime() });

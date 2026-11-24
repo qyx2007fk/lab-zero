@@ -1,0 +1,307 @@
+{
+  "world": {
+    "w": 2400,
+    "h": 1500,
+    "pad": 54
+  },
+  "obstacles": [
+    {
+      "type": "wall",
+      "shape": "rect",
+      "side": "top",
+      "x": 0,
+      "y": 0,
+      "w": 2400,
+      "h": 54
+    },
+    {
+      "type": "wall",
+      "shape": "rect",
+      "side": "bottom",
+      "x": 0,
+      "y": 1446,
+      "w": 2400,
+      "h": 54
+    },
+    {
+      "type": "wall",
+      "shape": "rect",
+      "side": "left",
+      "x": 0,
+      "y": 0,
+      "w": 54,
+      "h": 1500
+    },
+    {
+      "type": "wall",
+      "shape": "rect",
+      "side": "right",
+      "x": 2346,
+      "y": 0,
+      "w": 54,
+      "h": 1500
+    },
+    {
+      "type": "bench",
+      "shape": "rect",
+      "x": 1080,
+      "y": 570,
+      "w": 300,
+      "h": 100,
+      "variant": 0,
+      "seed": 1,
+      "label": "ANALYSIS"
+    },
+    {
+      "type": "bench",
+      "shape": "rect",
+      "x": 300,
+      "y": 420,
+      "w": 320,
+      "h": 96,
+      "variant": 1,
+      "seed": 2,
+      "label": "SAMPLE PREP"
+    },
+    {
+      "type": "bench",
+      "shape": "rect",
+      "x": 300,
+      "y": 1010,
+      "w": 350,
+      "h": 100,
+      "variant": 2,
+      "seed": 3,
+      "label": "COLD STORAGE"
+    },
+    {
+      "type": "bench",
+      "shape": "rect",
+      "x": 1890,
+      "y": 1010,
+      "w": 320,
+      "h": 100,
+      "variant": 3,
+      "seed": 4,
+      "label": "CULTURE"
+    },
+    {
+      "type": "server",
+      "shape": "rect",
+      "x": 1870,
+      "y": 330,
+      "w": 112,
+      "h": 170,
+      "variant": 0,
+      "seed": 5
+    },
+    {
+      "type": "server",
+      "shape": "rect",
+      "x": 2015,
+      "y": 330,
+      "w": 112,
+      "h": 170,
+      "variant": 1,
+      "seed": 6
+    },
+    {
+      "type": "server",
+      "shape": "rect",
+      "x": 2160,
+      "y": 330,
+      "w": 112,
+      "h": 170,
+      "variant": 2,
+      "seed": 7
+    },
+    {
+      "type": "tank",
+      "shape": "circle",
+      "x": 820,
+      "y": 260,
+      "r": 88,
+      "variant": 0,
+      "seed": 8,
+      "label": "SPECIMEN 04",
+      "cr": 97
+    },
+    {
+      "type": "tank",
+      "shape": "circle",
+      "x": 1370,
+      "y": 250,
+      "r": 104,
+      "variant": 1,
+      "seed": 9,
+      "label": "SPECIMEN 00",
+      "cr": 113
+    },
+    {
+      "type": "pillar",
+      "shape": "circle",
+      "x": 330,
+      "y": 780,
+      "r": 32,
+      "seed": 10,
+      "cr": 36
+    },
+    {
+      "type": "pillar",
+      "shape": "circle",
+      "x": 2090,
+      "y": 780,
+      "r": 32,
+      "seed": 11,
+      "cr": 36
+    },
+    {
+      "type": "cryo",
+      "shape": "circle",
+      "x": 680,
+      "y": 830,
+      "r": 42,
+      "seed": 12,
+      "label": "CRYO",
+      "cr": 47
+    },
+    {
+      "type": "cryo",
+      "shape": "circle",
+      "x": 1720,
+      "y": 880,
+      "r": 48,
+      "seed": 13,
+      "label": "CRYO",
+      "cr": 53
+    },
+    {
+      "type": "crate",
+      "shape": "rect",
+      "x": 970,
+      "y": 1180,
+      "w": 88,
+      "h": 84,
+      "seed": 14,
+      "label": "07"
+    },
+    {
+      "type": "crate",
+      "shape": "rect",
+      "x": 1070,
+      "y": 1216,
+      "w": 78,
+      "h": 66,
+      "seed": 15,
+      "label": "BIO"
+    },
+    {
+      "type": "crate",
+      "shape": "rect",
+      "x": 1450,
+      "y": 1160,
+      "w": 100,
+      "h": 94,
+      "seed": 16,
+      "label": "07"
+    },
+    {
+      "type": "console",
+      "shape": "rect",
+      "x": 1620,
+      "y": 550,
+      "w": 100,
+      "h": 70,
+      "seed": 17,
+      "label": "SECURITY"
+    },
+    {
+      "type": "crate",
+      "shape": "rect",
+      "x": 560,
+      "y": 260,
+      "w": 72,
+      "h": 72,
+      "seed": 18,
+      "label": "X"
+    },
+    {
+      "type": "console",
+      "shape": "rect",
+      "x": 620,
+      "y": 610,
+      "w": 92,
+      "h": 60,
+      "seed": 19,
+      "label": "POWER"
+    }
+  ],
+  "doors": [
+    {
+      "side": "top",
+      "x": 1146,
+      "y": 0,
+      "w": 108,
+      "h": 54,
+      "label": "N-07",
+      "sx": 1200,
+      "sy": 182
+    },
+    {
+      "side": "bottom",
+      "x": 1146,
+      "y": 1446,
+      "w": 108,
+      "h": 54,
+      "label": "S-07",
+      "sx": 1200,
+      "sy": 1340
+    },
+    {
+      "side": "left",
+      "x": 0,
+      "y": 738,
+      "w": 54,
+      "h": 108,
+      "label": "W-07",
+      "sx": 164,
+      "sy": 792
+    },
+    {
+      "side": "right",
+      "x": 2346,
+      "y": 738,
+      "w": 54,
+      "h": 108,
+      "label": "E-07",
+      "sx": 2236,
+      "sy": 792
+    }
+  ],
+  "spawnPoints": [
+    {
+      "x": 1200,
+      "y": 182,
+      "door": "N-07"
+    },
+    {
+      "x": 1200,
+      "y": 1340,
+      "door": "S-07"
+    },
+    {
+      "x": 164,
+      "y": 792,
+      "door": "W-07"
+    },
+    {
+      "x": 2236,
+      "y": 792,
+      "door": "E-07"
+    }
+  ],
+  "bossSpawn": {
+    "x": 1200,
+    "y": 188
+  }
+}

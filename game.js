@@ -3461,6 +3461,24 @@
       trait: '保持中距离喷射毒液。毒伤会被老爹完全免疫，命中后附带持续中毒压力。',
     },
     {
+      id: 'runner', system: 'lab', name: '疾尸', code: 'SPRINTER HOST', icon: '疾', threat: '中威胁',
+      desc: '肌肉纤维被零号病毒重新编织的感染者。它会以前倾的姿势持续奔跑，像一枚会转弯的活体炮弹。',
+      hp: '僵尸 ×1.3', speed: '僵尸 ×4', damage: '与僵尸相同',
+      trait: '奔跑接近并快速近战撕咬；攻击间隔比普通僵尸更短，优先拉开距离点射。',
+    },
+    {
+      id: 'entangler', system: 'lab', name: '缠绕者', code: 'GRASPING HOST', icon: '缠', threat: '高威胁',
+      desc: '皮肤下长满菌丝状触须的感染者。远离玩家时会把身体散成半透明的孢子雾，只有靠近到约十个身位内才能被命中。',
+      hp: '僵尸 ×1.15', speed: '缓慢', damage: '定身 / 绞杀',
+      trait: '约三个身位内会跳到玩家身上并持续定身；快速连按 F 六次可在时限内挣脱，按慢了会被绞杀。',
+    },
+    {
+      id: 'charger', system: 'lab', name: '冲撞者', code: 'RAMMING HOST', icon: '撞', threat: '高威胁',
+      desc: '骨骼与肌肉异常增生的重型感染者。首次发现玩家时会压低身体，然后以超过疾尸的速度直线冲撞。',
+      hp: '僵尸 ×3.1', speed: '慢 / 冲撞 ×5', damage: '僵尸 ×2',
+      trait: '只能冲撞一次；冲刺距离约为常规冲锋的 3 倍，命中造成大量伤害并眩晕 3 秒。撞墙或冲撞结束后不再冲锋，转为缓慢近战。',
+    },
+    {
       id: 'director', system: 'lab', name: '实验室主任', code: 'DR. VELA // DIRECTOR', icon: '主', threat: '致命',
       desc: '第一收容层的区域指挥官。把毒剂、冲锋枪与自爆变异体组合成一套围猎战术。',
       hp: '1250', speed: '82', damage: '12',
@@ -3810,6 +3828,62 @@
       bulletSpeed: 0,
       damage: (wave) => 8 + Math.min(5, wave * 0.4),
     },
+    runner: {
+      label: '疾尸',
+      type: 'runner',
+      radius: 15,
+      color: '#b6d86f',
+      accent: '#efffa6',
+      hp: (wave) => Math.round((85 + wave * 9) * 1.3),
+      speed: (wave) => (72 + Math.min(38, wave * 1.4)) * 4,
+      xp: 28,
+      credits: [3, 15],
+      attackRange: 42,
+      preferred: [0, 20],
+      fireMin: 0.46,
+      fireMax: 0.72,
+      telegraph: 0.12,
+      bulletSpeed: 0,
+      damage: (wave) => 8 + Math.min(5, wave * 0.4),
+    },
+    entangler: {
+      label: '缠绕者',
+      type: 'entangler',
+      radius: 16,
+      color: '#b480c8',
+      accent: '#f0b8ff',
+      hp: (wave) => Math.round((85 + wave * 9) * 1.15),
+      speed: (wave) => 38 + Math.min(18, wave * 0.8),
+      xp: 38,
+      credits: [5, 20],
+      attackRange: 84,
+      preferred: [0, 26],
+      fireMin: 0,
+      fireMax: 0,
+      telegraph: 0.3,
+      bulletSpeed: 0,
+      damage: () => 0,
+      immuneRange: 280,
+    },
+    charger: {
+      label: '冲撞者',
+      type: 'charger',
+      radius: 25,
+      color: '#d89a58',
+      accent: '#ffd38c',
+      hp: (wave) => Math.round((85 + wave * 9) * 3.1),
+      speed: (wave) => 42 + Math.min(16, wave * 0.6),
+      xp: 62,
+      credits: [14, 36],
+      attackRange: 48,
+      preferred: [0, 24],
+      fireMin: 0.9,
+      fireMax: 1.35,
+      telegraph: 0.18,
+      bulletSpeed: 0,
+      damage: (wave) => (8 + Math.min(5, wave * 0.4)) * 2,
+      chargeSpeed: (wave) => (72 + Math.min(38, wave * 1.4)) * 5,
+    },
     mutant: {
       label: '变异体',
       type: 'mutant',
@@ -3909,9 +3983,12 @@
       faction: 'lab',
       bossKind: 'director',
       pool: [
-        { type: 'zombie', weight: 46 },
-        { type: 'spider', weight: 34 },
-        { type: 'mutant', weight: 20 },
+        { type: 'zombie', weight: 30 },
+        { type: 'spider', weight: 22 },
+        { type: 'mutant', weight: 14 },
+        { type: 'runner', weight: 18 },
+        { type: 'entangler', weight: 10 },
+        { type: 'charger', weight: 12 },
       ],
     },
     military: {
@@ -4054,6 +4131,10 @@
     waveTotal: 0,
     waveElapsed: 0,
     perfClock: 0,
+    hudClock: 0,
+    renderScale: 1,
+    perfAvgMs: 16.7,
+    perfCooldown: 0,
     spawnQueue: [],
     intermission: false,
     intermissionTimer: 0,
@@ -4063,6 +4144,14 @@
     settingsTab: 'audio',
     settingsReturnMode: 'playing',
     developerMode: INITIAL_DEVELOPER_MODE,
+    networkMode: false,
+    networkPvp: false,
+    networkPlayers: [],
+    networkTick: null,
+    networkOnEscape: null,
+    networkBarrels: [],
+    networkMedkits: [],
+    networkTracers: [],
     bestiaryFilter: 'all',
     endlessBiome: 'lab',
     speedMultiplier: 1,
@@ -4140,6 +4229,13 @@
       skillCooldown: 0,
       skillCooldownMax: character.active ? character.active.cooldown : 0,
       paralyzed: 0,
+      entangled: false,
+      entangleTimer: 0,
+      entangleDuration: 0,
+      entanglePresses: 0,
+      entangleRequired: 0,
+      entangleEnemy: null,
+      entangleFlash: 0,
       healDroneTimer: 0,
       healDroneTick: 0,
       holoShieldTimer: 0,
@@ -4716,7 +4812,7 @@
   }
 
   function updateSpeedUI() {
-    const available = game.runMode === 'endless';
+    const available = game.runMode === 'endless' && !game.networkMode;
     dom.btnSpeed?.classList.toggle('is-hidden', !available);
     dom.btnSpeed?.classList.toggle('is-fast', available && game.speedMultiplier === 2);
     if (dom.speedLabel) setText(dom.speedLabel, game.speedMultiplier === 2 ? '2×' : '1×');
@@ -4897,7 +4993,29 @@
     const storyMode = game.runMode === 'story';
     const trainingMode = game.runMode === 'training';
     const campaignMode = game.runMode === 'campaign' && game.campaign.level;
-    if (storyMode) {
+    if (game.networkMode && game.networkPvp) {
+      setText(dom.hudDifficulty, '联机 PVP');
+      setText(dom.missionKicker, 'LAN // SERVER AUTHORITY');
+      setText(dom.waveTitle, `回合 ${pad2(game.networkRound || 1)} / ${pad2(game.networkRounds || 1)}`);
+      const alive = game.networkAliveCount ?? 0;
+      if (game.networkPhase === 'countdown') {
+        setText(dom.missionState, '战斗准备');
+        dom.missionState.classList.remove('is-danger');
+      } else if (game.networkPhase === 'roundSummary') {
+        setText(dom.missionState, '回合结算');
+        dom.missionState.classList.add('is-danger');
+      } else if (game.networkPhase === 'result') {
+        setText(dom.missionState, '对战结束');
+        dom.missionState.classList.add('is-danger');
+      } else {
+        setText(dom.missionState, '交战中');
+        dom.missionState.classList.add('is-danger');
+      }
+      setText(dom.enemyCount, `${alive} 名玩家存活`);
+      dom.threatFill.style.width = `${clamp(alive / Math.max(1, game.players?.length || 1), 0, 1) * 100}%`;
+      setText(dom.threatLabel, 'PVP');
+      setText(dom.minimapSector, 'PVP');
+    } else if (storyMode) {
       const story = game.story || {};
       const stage = story.currentCombat || {};
       setText(dom.hudDifficulty, '剧情');
@@ -5105,6 +5223,11 @@
 
   function openShop(fromCampaignTerminal = false) {
     if (!game.player || game.mode !== 'playing') return;
+    if (game.player.entangled) {
+      Sfx.error();
+      addToast('F', '正在被缠绕', '先快速连按 F 挣脱，再打开军械库', 'danger', 2400);
+      return;
+    }
     if (game.runMode === 'story') {
       Sfx.error();
       addToast('B', '剧情战斗无法打开军械库', '本场战斗使用剧情预设装备', '', 2800);
@@ -5558,6 +5681,11 @@
     const p = game.player;
     if (!p) return;
     if (game.mode !== 'playing') return;
+    if (p.entangled) {
+      Sfx.error();
+      addToast('F', '正在被缠绕', '先快速连按 F 挣脱，再打开科技树', 'danger', 2400);
+      return;
+    }
     if (game.runMode === 'campaign') {
       Sfx.error();
       addToast('T', '闯关模式没有科技树', '请在商店终端购买战术属性与武器改装', '', 3000);
@@ -7859,6 +7987,28 @@
       e.bomber = true;
       e.exploded = false;
     }
+    if (type === 'runner') {
+      e.runner = true;
+    }
+    if (type === 'entangler') {
+      e.entangler = true;
+      e.immuneRange = cfg.immuneRange || 260;
+      e.attached = false;
+      e.attachedPlayer = null;
+      e.jumpTimer = 0;
+      e.ghostPhase = rand(0, TAU);
+    }
+    if (type === 'charger') {
+      e.charger = true;
+      e.chargeState = 'ready';
+      e.chargeWindup = 0;
+      e.chargeTime = 0;
+      e.chargeUsed = false;
+      e.chargeHit = false;
+      e.chargeDirX = 0;
+      e.chargeDirY = 0;
+      e.chargeSpeed = cfg.chargeSpeed ? cfg.chargeSpeed(game.wave) : 320;
+    }
     if (type === 'boss' && game.runMode !== 'campaign') {
       const system = ENEMY_SYSTEMS[game.endlessBiome] || ENEMY_SYSTEMS.lab;
       e.bossKind = options.bossKind || system.bossKind;
@@ -10095,6 +10245,8 @@
     if (!QUALITY_SETTINGS[id] || game.quality === id) return;
     game.quality = id;
     storeString('labzero.quality', id);
+    game.renderScale = 1;
+    game.perfCooldown = 3;
     applyQualityClass();
     resizeCanvas();
     updateSettingsQualityUI();
@@ -10273,6 +10425,7 @@
       const d = dist(p.x, p.y, e.x, e.y);
       if (d >= best) continue;
       if (!hasLineOfSight(p.x, p.y, e.x, e.y)) continue;
+      if (e.type === 'entangler' && !e.attached && d > (e.immuneRange || 280)) continue;
       best = d;
       target = e;
     }
@@ -10316,7 +10469,7 @@
 
   function startDash() {
     const p = game.player;
-    if (!p || !p.alive || p.reviving || game.mode !== 'playing' || p.dashCooldown > 0 || p.dashTimer > 0) return;
+    if (!p || !p.alive || p.reviving || p.entangled || game.mode !== 'playing' || p.dashCooldown > 0 || p.dashTimer > 0) return;
     let dx = 0;
     let dy = 0;
     if (input.keys.has('KeyW') || input.keys.has('ArrowUp')) dy -= 1;
@@ -10353,7 +10506,7 @@
 
   function throwGrenade() {
     const p = game.player;
-    if (!p || !p.alive || p.reviving || game.mode !== 'playing' || p.grenadeCooldown > 0) return;
+    if (!p || !p.alive || p.reviving || p.entangled || game.mode !== 'playing' || p.grenadeCooldown > 0) return;
     const id = p.selectedGrenade || 'frag';
     const def = GRENADES[id];
     if (!def) return;
@@ -10768,7 +10921,7 @@
 
   function tryShoot(hand = 'main') {
     const p = game.player;
-    if (!p || !p.alive || p.reviving || game.mode !== 'playing') return;
+    if (!p || !p.alive || p.reviving || p.entangled || game.networkMode || game.mode !== 'playing') return;
     const offhand = hand === 'offhand';
     if (offhand && !hasTalent('dualWield')) return;
     const weaponId = offhand ? p.offhand : p.weapon;
@@ -10908,6 +11061,18 @@
       p.reviveTimer -= dt;
       updateAimFromMouse();
       if (p.reviveTimer <= 0) completeRevive();
+      return;
+    }
+
+    if (p.entangled) {
+      p.moving = false;
+      p.jetpackActive = false;
+      p.vx = 0;
+      p.vy = 0;
+      p.entangleFlash = Math.max(0, (p.entangleFlash || 0) - dt);
+      p.entangleTimer = Math.max(0, (p.entangleTimer || 0) - dt);
+      updateAimFromMouse();
+      if (p.entangleTimer <= 0) failEntangle();
       return;
     }
 
@@ -11375,6 +11540,17 @@
 
   function damageEnemy(enemy, damage, angle, hitX, hitY, quiet = false) {
     if (!enemy || enemy.dead || enemy.spawnTimer > 0) return;
+    if (enemy.type === 'entangler' && !enemy.attached) {
+      const player = game.player;
+      const gap = player ? dist(enemy.x, enemy.y, player.x, player.y) : 9999;
+      if (gap > (enemy.immuneRange || 260)) {
+        if (!quiet) {
+          addText(enemy.x, enemy.y - enemy.radius - 12, '虚化 · 免疫', '204, 170, 241', 0.65, 10, -18);
+          addParticle({ type: 'ring', x: enemy.x, y: enemy.y, life: 0.25, size: enemy.radius * 1.8, color: '196, 153, 235', alpha: 0.25 });
+        }
+        return;
+      }
+    }
     if (enemy.trainingDummy) {
       const actual = Math.max(0, Math.min(enemy.hp, damage));
       enemy.hp = Math.max(1, enemy.hp - actual);
@@ -11415,6 +11591,17 @@
 
   function killEnemy(enemy) {
     if (enemy.dead) return;
+    if (enemy.attachedPlayer) {
+      const attached = enemy.attachedPlayer;
+      if (attached.entangleEnemy === enemy) {
+        attached.entangled = false;
+        attached.entangleTimer = 0;
+        attached.entanglePresses = 0;
+        attached.entangleEnemy = null;
+      }
+      enemy.attached = false;
+      enemy.attachedPlayer = null;
+    }
     if (enemy.bomber) detonateBomber(enemy);
     enemy.dead = true;
     enemy.deathAge = 0;
@@ -11679,7 +11866,7 @@
 
   function useCharacterSkill() {
     const p = game.player;
-    if (!p || game.mode !== 'playing' || !p.alive || p.reviving) return;
+    if (!p || game.mode !== 'playing' || !p.alive || p.reviving || p.entangled) return;
     const character = getCharacterDef(p.characterId);
     const skill = character.active;
     if (!skill) return;
@@ -11861,6 +12048,11 @@
 
   function deployTurret() {
     const p = game.player;
+    if (p?.entangled) {
+      Sfx.error();
+      addToast('F', '正在被缠绕', '先快速连按 F 挣脱，无法部署哨戒炮塔', 'danger', 2400);
+      return;
+    }
     if (!p || game.mode !== 'playing' || !p.alive) return;
     if (!hasTalent('turret')) {
       Sfx.error();
@@ -12330,6 +12522,19 @@
     if (player) {
       player.reviving = false;
       player.reviveTimer = 0;
+      if (player.entangled) {
+        const entangler = player.entangleEnemy;
+        player.entangled = false;
+        player.entangleTimer = 0;
+        player.entanglePresses = 0;
+        player.entangleEnemy = null;
+        if (entangler && !entangler.dead) {
+          entangler.attached = false;
+          entangler.attachedPlayer = null;
+          entangler.hp = 0;
+          killEnemy(entangler);
+        }
+      }
     }
     dom.reviveHud.classList.add('is-hidden');
     game.shake = 28;
@@ -12490,6 +12695,224 @@
             drag: 3,
           });
         }
+      }
+    }
+  }
+
+  function attachEntangler(enemy, player) {
+    if (!enemy || !player || !player.alive || player.entangled) return;
+    player.entangled = true;
+    player.entangleTimer = 2.55;
+    player.entangleDuration = 2.55;
+    player.entanglePresses = 0;
+    player.entangleRequired = 6;
+    player.entangleEnemy = enemy;
+    player.entangleFlash = 0.18;
+    player.vx = 0;
+    player.vy = 0;
+    enemy.attached = true;
+    enemy.attachedPlayer = player;
+    enemy.vx = 0;
+    enemy.vy = 0;
+    enemy.x = player.x;
+    enemy.y = player.y;
+    game.shake = Math.max(game.shake, 6);
+    game.hitFlash = Math.max(game.hitFlash, 0.25);
+    Sfx.hurt();
+    addText(player.x, player.y - 42, '被缠绕！快速按 F', '255, 177, 224', 1.5, 13, -24);
+    addToast('!', '缠绕者已扑到身上', '快速连按 F 六次挣脱 · 按慢了会被绞杀', 'danger', 4200);
+  }
+
+  function releaseEntangle(success = true) {
+    const p = game.player;
+    const enemy = p?.entangleEnemy;
+    if (p) {
+      p.entangled = false;
+      p.entangleTimer = 0;
+      p.entanglePresses = 0;
+      p.entangleRequired = 0;
+      p.entangleEnemy = null;
+      p.invuln = Math.max(p.invuln, success ? 0.7 : 0.2);
+    }
+    if (enemy && enemy.attachedPlayer === p) {
+      enemy.attached = false;
+      enemy.attachedPlayer = null;
+    }
+    if (success && enemy && !enemy.dead) {
+      enemy.hp = 0;
+      killEnemy(enemy);
+      addText(p.x, p.y - 36, '挣脱成功', '151, 255, 206', 1.2, 12, -24);
+      addToast('◆', '挣脱缠绕', '缠绕者已被扯碎', 'gold', 2600);
+      Sfx.upgrade();
+    }
+    return enemy;
+  }
+
+  function failEntangle() {
+    const p = game.player;
+    if (!p || !p.entangled) return;
+    const enemy = p.entangleEnemy;
+    p.entangled = false;
+    p.entangleTimer = 0;
+    p.entangleEnemy = null;
+    if (enemy) {
+      enemy.attached = false;
+      enemy.attachedPlayer = null;
+      if (!enemy.dead) {
+        enemy.hp = 0;
+        killEnemy(enemy);
+      }
+    }
+    game.shake = Math.max(game.shake, 12);
+    addText(p.x, p.y - 34, '挣脱失败 · 绞杀', '255, 92, 85', 1.4, 13, -22);
+    addToast('!', '缠绕者收紧菌丝', '按 F 太慢，生命信号被绞断', 'danger', 3800);
+    if (!isDeveloperMode()) {
+      p.invuln = 0;
+      p.hp = 1;
+    }
+    hurtPlayer(p.maxHp * 3 + p.shield + 40, 0, { entangle: true });
+  }
+
+  function struggleEntangle() {
+    const p = game.player;
+    if (!p || !p.alive || !p.entangled) return false;
+    p.entanglePresses += 1;
+    p.entangleFlash = 0.16;
+    addText(p.x + rand(-8, 8), p.y - 30, '挣脱！', '255, 228, 151', 0.35, 10, -24);
+    game.shake = Math.max(game.shake, 1.1);
+    Sfx.click();
+    if (p.entanglePresses >= p.entangleRequired) {
+      releaseEntangle(true);
+    }
+    return true;
+  }
+
+  function updateEntangler(e, dt) {
+    const p = game.player;
+    if (!p || !p.alive) return;
+    if (e.attached) {
+      e.x = p.x;
+      e.y = p.y;
+      e.vx = 0;
+      e.vy = 0;
+      e.aimAngle = p.aimAngle;
+      return;
+    }
+    if (p.entangled) {
+      e.vx = 0;
+      e.vy = 0;
+      return;
+    }
+    const d = dist(e.x, e.y, p.x, p.y);
+    e.aimAngle = Math.atan2(p.y - e.y, p.x - e.x);
+    e.hasLOS = hasLineOfSight(e.x, e.y, p.x, p.y);
+    if (d > e.attackRange) {
+      e.jumpTimer = 0;
+      moveEnemyNav(e, p.x, p.y, dt, 1);
+      return;
+    }
+    e.vx = 0;
+    e.vy = 0;
+    if (e.jumpTimer <= 0) {
+      e.jumpTimer = 0.34;
+      addText(e.x, e.y - e.radius - 18, '缠绕扑击', '232, 166, 255', 0.7, 11, -22);
+      return;
+    }
+    e.jumpTimer -= dt;
+    if (e.jumpTimer <= 0 && e.hasLOS) attachEntangler(e, p);
+  }
+
+  function updateCharger(e, dt) {
+    const p = game.player;
+    if (!p || !p.alive) return;
+    const d = dist(e.x, e.y, p.x, p.y);
+    e.aimAngle = Math.atan2(p.y - e.y, p.x - e.x);
+    e.hasLOS = hasLineOfSight(e.x, e.y, p.x, p.y);
+    e.atkCd = Math.max(0, e.atkCd - dt);
+    e.attackAnim = Math.max(0, (e.attackAnim || 0) - dt);
+    if (e.chargeState === 'windup') {
+      e.chargeWindup -= dt;
+      e.vx = 0;
+      e.vy = 0;
+      if (e.chargeWindup <= 0) {
+        e.chargeState = 'charging';
+        e.chargeTime = 1.12;
+        e.chargeDirX = Math.cos(e.aimAngle);
+        e.chargeDirY = Math.sin(e.aimAngle);
+        e.chargeHit = false;
+        game.shake = Math.max(game.shake, 3.2);
+        addText(e.x, e.y - e.radius - 20, '冲撞！', '255, 167, 95', 0.8, 13, -26);
+        Sfx.enemyShot('boss');
+      }
+      return;
+    }
+    if (e.chargeState === 'charging') {
+      e.chargeTime -= dt;
+      const nx = e.x + e.chargeDirX * e.chargeSpeed * dt;
+      const ny = e.y + e.chargeDirY * e.chargeSpeed * dt;
+      const wall = closestObstacleHit(e.x, e.y, nx, ny, e.radius * 0.85);
+      if (wall) {
+        e.x = wall.x;
+        e.y = wall.y;
+        e.chargeState = 'spent';
+        e.chargeTime = 0;
+        e.chargeUsed = true;
+        game.shake = Math.max(game.shake, 7);
+        for (let i = 0; i < 12; i += 1) {
+          addParticle({
+            type: i % 3 === 0 ? 'shard' : 'spark', x: e.x + rand(-10, 10), y: e.y + rand(-8, 8),
+            vx: rand(-140, 140), vy: rand(-120, 120), life: rand(0.2, 0.55), size: rand(1.5, 4),
+            color: i % 2 ? '255, 208, 145' : '159, 113, 70', drag: 2.8, gravity: 30,
+          });
+        }
+        addText(e.x, e.y - e.radius - 16, '冲撞中断', '255, 205, 144', 1.0, 11, -20);
+        return;
+      }
+      e.x = nx;
+      e.y = ny;
+      for (let i = 0; i < 2; i += 1) {
+        addParticle({
+          type: 'smoke', x: e.x + rand(-8, 8), y: e.y + rand(-6, 6), vx: rand(-25, 25), vy: rand(-20, 20),
+          life: rand(0.25, 0.6), size: rand(5, 12), color: '137, 108, 79', alpha: 0.12, drag: 2,
+        });
+      }
+      if (!e.chargeHit && dist(e.x, e.y, p.x, p.y) < e.radius + p.r + 10) {
+        e.chargeHit = true;
+        e.chargeState = 'spent';
+        e.chargeTime = 0;
+        e.chargeUsed = true;
+        p.paralyzed = Math.max(p.paralyzed || 0, 3);
+        p.dashTimer = 0;
+        hurtPlayer(e.damage * 1.25, e.aimAngle);
+        game.shake = Math.max(game.shake, 14);
+        game.hitFlash = Math.max(game.hitFlash, 0.35);
+        addText(p.x, p.y - 42, '眩晕 3s', '255, 198, 99', 1.2, 13, -22);
+        addToast('!', '被冲撞者撞飞', '眩晕 3 秒 · 冲撞者已失去冲锋能力', 'danger', 3200);
+        return;
+      }
+      if (e.chargeTime <= 0) {
+        e.chargeState = 'spent';
+        e.chargeUsed = true;
+      }
+      return;
+    }
+    if (!e.chargeUsed && e.hasLOS && d < 560 && d > 75) {
+      e.chargeState = 'windup';
+      e.chargeWindup = 0.48;
+      e.chargeUsed = true;
+      e.atkCd = Math.max(e.atkCd, 0.9);
+      addText(e.x, e.y - e.radius - 18, '蓄力冲撞', '255, 207, 139', 0.8, 11, -22);
+      return;
+    }
+    if (d > e.radius + p.r + 8) {
+      moveEnemyNav(e, p.x, p.y, dt, 1);
+    } else {
+      e.vx = 0;
+      e.vy = 0;
+      if (e.atkCd <= 0) {
+        e.atkCd = enemyAttackDelay(e, e.fireMin, e.fireMax);
+        e.attackAnim = 0.22;
+        hurtPlayer(e.damage, e.aimAngle);
       }
     }
   }
@@ -12864,8 +13287,16 @@
         updateCampaignBomber(e, dt);
         continue;
       }
-      if (e.type === 'zombie') {
+      if (e.type === 'zombie' || e.type === 'runner') {
         updateZombie(e, dt);
+        continue;
+      }
+      if (e.type === 'entangler') {
+        updateEntangler(e, dt);
+        continue;
+      }
+      if (e.type === 'charger') {
+        updateCharger(e, dt);
         continue;
       }
       if (e.type === 'spider') {
@@ -14044,7 +14475,13 @@
       else updateWave(dt);
     }
     updateCamera(dt);
-    if (updateInterface) updateHUD();
+    if (updateInterface) {
+      game.hudClock = (game.hudClock || 0) + dt;
+      if (game.hudClock >= 1 / 30) {
+        game.hudClock = 0;
+        updateHUD();
+      }
+    }
     if (game.shake > 0.03) {
       game.shake *= Math.exp(-8.5 * dt);
     } else {
@@ -14113,7 +14550,9 @@
 
   function resizeCanvas() {
     const dprCap = QUALITY_SETTINGS[game.quality]?.dprCap || 2;
-    const dpr = Math.min(dprCap, Math.max(1, window.devicePixelRatio || 1));
+    const nativeDpr = Math.max(1, window.devicePixelRatio || 1);
+    const renderScale = nativeDpr > 1.25 ? clamp(game.renderScale || 1, 0.75, 1) : 1;
+    const dpr = Math.max(nativeDpr > 1.25 ? 0.75 : 1, Math.min(dprCap, nativeDpr) * renderScale);
     game.dpr = dpr;
     game.viewW = window.innerWidth;
     game.viewH = window.innerHeight;
@@ -14355,6 +14794,7 @@
       const slot = event.target.closest('.weapon-slot');
       if (!slot || !game.player) return;
       const id = slot.dataset.weapon;
+      if (game.networkMode) return;
       if (game.player.owned[id]) {
         if (game.mode === 'playing') {
           setWeapon(id);
@@ -14367,6 +14807,7 @@
 
     dom.canvas.addEventListener('pointerdown', (event) => {
       if (game.mode !== 'playing' || game.player?.reviving) return;
+      if (game.networkMode) return;
       if (event.button !== 0 && event.button !== 2) return;
       Sfx.init();
       updatePointerPosition(event);
@@ -14419,6 +14860,13 @@
         return;
       }
       if (isTyping) return;
+      if (game.networkMode) {
+        if (code === 'Escape' && game.networkOnEscape) {
+          event.preventDefault();
+          game.networkOnEscape();
+        }
+        return;
+      }
       if (introState.active) {
         if (!event.repeat && ['Enter', 'NumpadEnter', 'Escape', 'Space'].includes(code)) {
           event.preventDefault();
@@ -14541,6 +14989,11 @@
           event.preventDefault();
         }
       } else if (code === 'KeyF') {
+        if (game.player?.entangled) {
+          if (!event.repeat) struggleEntangle();
+          event.preventDefault();
+          return;
+        }
         if (game.runMode === 'campaign') tryCampaignInteract();
         else deployTurret();
         event.preventDefault();
@@ -14600,6 +15053,18 @@
      Rendering helpers
      ------------------------------------------------------------ */
   const rgba = (color, alpha) => `rgba(${color}, ${alpha})`;
+  function colorAlpha(color, alpha) {
+    const value = String(color || '#ffffff');
+    if (value.startsWith('#')) {
+      let hex = value.slice(1);
+      if (hex.length === 3) hex = hex.split('').map((c) => c + c).join('');
+      if (hex.length === 6) {
+        const n = parseInt(hex, 16);
+        if (Number.isFinite(n)) return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${alpha})`;
+      }
+    }
+    return `rgba(${value}, ${alpha})`;
+  }
 
   function inView(x, y, pad = 90, camX = game.camera.x, camY = game.camera.y) {
     const viewW = game.viewW / CAMERA_ZOOM;
@@ -14729,8 +15194,14 @@
       ctx.translate(coin.x, coin.y + bob);
       ctx.rotate(game.time * 2.2 + coin.phase);
       ctx.globalAlpha = fade;
-      ctx.shadowColor = 'rgba(255, 187, 90, 0.6)';
-      ctx.shadowBlur = 12;
+      ctx.fillStyle = 'rgba(255, 194, 102, 0.16)';
+      ctx.beginPath();
+      ctx.moveTo(0, -coin.r * 1.7);
+      ctx.lineTo(coin.r * 1.35, 0);
+      ctx.lineTo(0, coin.r * 1.7);
+      ctx.lineTo(-coin.r * 1.35, 0);
+      ctx.closePath();
+      ctx.fill();
       ctx.fillStyle = '#ffd17d';
       ctx.beginPath();
       ctx.moveTo(0, -coin.r);
@@ -14739,7 +15210,6 @@
       ctx.lineTo(-coin.r * 0.8, 0);
       ctx.closePath();
       ctx.fill();
-      ctx.shadowBlur = 0;
       ctx.fillStyle = '#fff2c3';
       ctx.beginPath();
       ctx.moveTo(0, -coin.r * 0.55);
@@ -14765,10 +15235,7 @@
       const bob = Math.sin(item.bob) * 3;
       ctx.save();
       ctx.translate(item.x, item.y + bob);
-      const glow = ctx.createRadialGradient(0, 0, 1, 0, 0, 25);
-      glow.addColorStop(0, 'rgba(108, 255, 172, 0.28)');
-      glow.addColorStop(1, 'rgba(108, 255, 172, 0)');
-      ctx.fillStyle = glow;
+      ctx.fillStyle = 'rgba(108, 255, 172, 0.13)';
       ctx.beginPath();
       ctx.arc(0, 0, 25, 0, TAU);
       ctx.fill();
@@ -14826,10 +15293,7 @@
         ctx.lineTo(p.x, p.y);
         ctx.stroke();
         ctx.setLineDash([]);
-        const g = ctx.createRadialGradient(mx, my, 0, mx, my, 24 + charge * 26);
-        g.addColorStop(0, rgba(color, 0.2 + charge * 0.26));
-        g.addColorStop(1, rgba(color, 0));
-        ctx.fillStyle = g;
+        ctx.fillStyle = rgba(color, 0.12 + charge * 0.16);
         ctx.beginPath();
         ctx.arc(mx, my, 24 + charge * 26, 0, TAU);
         ctx.fill();
@@ -15058,11 +15522,11 @@
     ctx.restore();
   }
 
-  function drawPlayerActor(ctx) {
-    const p = game.player;
+  function drawPlayerActor(ctx, target = game.player) {
+    const p = target;
     if (!p) return;
     if (!p.alive) {
-      drawFallenPlayer(ctx);
+      drawFallenPlayer(ctx, p);
       return;
     }
     const blink = p.invuln > 0 && Math.floor(game.time * 34) % 2 === 0;
@@ -15368,8 +15832,30 @@
     ctx.restore();
   }
 
-  function drawFallenPlayer(ctx) {
-    const p = game.player;
+  function drawNetworkPlayerActor(ctx, p) {
+    drawPlayerActor(ctx, p);
+    if (!p) return;
+    ctx.save();
+    ctx.textAlign = 'center';
+    ctx.font = '700 8px "SFMono-Regular", monospace';
+    ctx.fillStyle = p.alive ? 'rgba(226, 255, 250, 0.92)' : 'rgba(255, 126, 108, 0.8)';
+    ctx.fillText(p.name || '干员', p.x, p.y - p.r - 20);
+    if (p.downed) {
+      ctx.fillStyle = 'rgba(255, 104, 82, .92)';
+      ctx.font = '700 8px "SFMono-Regular", monospace';
+      ctx.fillText('DOW NED', p.x, p.y + p.r + 16);
+      if (p.reviveProgress > 0) {
+        ctx.fillStyle = 'rgba(0,0,0,.6)';
+        ctx.fillRect(p.x - 24, p.y + p.r + 22, 48, 4);
+        ctx.fillStyle = '#8fffd1';
+        ctx.fillRect(p.x - 24, p.y + p.r + 22, 48 * clamp(p.reviveProgress / 3, 0, 1), 4);
+      }
+    }
+    ctx.restore();
+  }
+
+  function drawFallenPlayer(ctx, target = game.player) {
+    const p = target;
     if (!p) return;
     const alpha = game.mode === 'gameover' ? 0.5 : 0.82;
     ctx.save();
@@ -15551,6 +16037,138 @@
       ctx.beginPath();
       ctx.arc(8, 0, 3.2, 0, TAU);
       ctx.stroke();
+    } else if (type === 'runner') {
+      ctx.rotate(e.aimAngle);
+      const stride = Math.sin(t * 15 + e.x * 0.04) * 6;
+      ctx.strokeStyle = 'rgba(210, 255, 150, 0.22)';
+      ctx.lineWidth = 1.2;
+      for (let i = 0; i < 3; i += 1) {
+        ctx.beginPath();
+        ctx.moveTo(-e.radius - 8 - i * 7, -7 + i * 4);
+        ctx.lineTo(-e.radius - 24 - i * 9, -7 + i * 4);
+        ctx.stroke();
+      }
+      ctx.strokeStyle = '#1d2b18';
+      ctx.lineWidth = 4.6;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(-3, -5); ctx.lineTo(-15 + stride, -10);
+      ctx.moveTo(-3, 5); ctx.lineTo(-15 - stride, 10);
+      ctx.stroke();
+      ctx.fillStyle = '#536f3c';
+      ctx.beginPath();
+      ctx.ellipse(0, 0, e.radius * 1.12, e.radius * 0.63, -0.12, 0, TAU);
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(219, 255, 154, 0.45)';
+      ctx.lineWidth = 1.2;
+      ctx.stroke();
+      const reach = e.attackAnim > 0 ? 10 : 5;
+      ctx.strokeStyle = '#a9c675';
+      ctx.lineWidth = 2.8;
+      ctx.beginPath();
+      ctx.moveTo(2, -5); ctx.lineTo(14 + reach, -10);
+      ctx.moveTo(2, 5); ctx.lineTo(14 + reach, 10);
+      ctx.stroke();
+      ctx.fillStyle = '#cde88e';
+      ctx.beginPath(); ctx.arc(9, 0, e.radius * 0.42, 0, TAU); ctx.fill();
+      ctx.fillStyle = '#f4ff9c';
+      ctx.beginPath(); ctx.arc(13, -3, 1.5, 0, TAU); ctx.arc(13, 3, 1.5, 0, TAU); ctx.fill();
+    } else if (type === 'entangler') {
+      const player = game.player;
+      const gap = player ? dist(e.x, e.y, player.x, player.y) : 999;
+      const immune = !e.attached && gap > (e.immuneRange || 260);
+      ctx.globalAlpha = immune ? 0.24 : e.attached ? 0.86 : 0.82;
+      if (e.attached) {
+        ctx.strokeStyle = 'rgba(234, 173, 255, 0.72)';
+        ctx.lineWidth = 2;
+        for (let i = 0; i < 6; i += 1) {
+          const a = t * 1.8 + i / 6 * TAU;
+          ctx.beginPath();
+          ctx.moveTo(Math.cos(a) * 6, Math.sin(a) * 6);
+          ctx.quadraticCurveTo(Math.cos(a + 0.45) * 22, Math.sin(a + 0.45) * 18, Math.cos(a + 0.8) * 30, Math.sin(a + 0.8) * 26);
+          ctx.stroke();
+        }
+      } else {
+        for (let i = 0; i < 5; i += 1) {
+          const a = t * 0.8 + i / 5 * TAU;
+          ctx.strokeStyle = immune ? 'rgba(196, 155, 225, 0.35)' : 'rgba(219, 173, 240, 0.62)';
+          ctx.lineWidth = immune ? 1 : 1.8;
+          ctx.beginPath();
+          ctx.moveTo(Math.cos(a) * 4, Math.sin(a) * 4);
+          ctx.quadraticCurveTo(Math.cos(a + 0.4) * 18, Math.sin(a + 0.4) * 15, Math.cos(a + 0.9) * 26, Math.sin(a + 0.9) * 22);
+          ctx.stroke();
+        }
+      }
+      ctx.fillStyle = immune ? '#6d5877' : '#89639c';
+      ctx.strokeStyle = immune ? 'rgba(206, 171, 230, 0.3)' : 'rgba(244, 194, 255, 0.72)';
+      ctx.lineWidth = 1.3;
+      ctx.beginPath(); ctx.arc(0, 0, e.radius * (e.attached ? 0.72 : 0.9), 0, TAU); ctx.fill(); ctx.stroke();
+      const pods = 5;
+      for (let i = 0; i < pods; i += 1) {
+        const a = t * 2 + i / pods * TAU;
+        ctx.fillStyle = immune ? 'rgba(174, 138, 194, 0.35)' : 'rgba(238, 177, 255, 0.72)';
+        ctx.beginPath(); ctx.arc(Math.cos(a) * 8, Math.sin(a) * 8, 2.4, 0, TAU); ctx.fill();
+      }
+      ctx.fillStyle = immune ? 'rgba(224, 184, 246, 0.5)' : '#f4c6ff';
+      ctx.beginPath(); ctx.arc(0, 0, 2.2, 0, TAU); ctx.fill();
+      if (immune) {
+        ctx.globalAlpha = 0.65;
+        ctx.fillStyle = 'rgba(228, 191, 248, 0.8)';
+        ctx.font = '700 8px "SFMono-Regular", monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText('虚化', 0, -e.radius - 9);
+      }
+    } else if (type === 'charger') {
+      ctx.rotate(e.aimAngle);
+      const charging = e.chargeState === 'charging';
+      const stride = charging ? 0 : Math.sin(t * 5 + e.x * 0.03) * 2;
+      if (charging) {
+        ctx.save();
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.strokeStyle = 'rgba(255, 157, 91, 0.5)';
+        ctx.lineWidth = 2;
+        for (let i = 0; i < 4; i += 1) {
+          ctx.beginPath();
+          ctx.moveTo(-e.radius * 1.1 - i * 8, -12 + i * 8);
+          ctx.lineTo(-e.radius * 1.8 - i * 11, -12 + i * 8);
+          ctx.stroke();
+        }
+        ctx.restore();
+      }
+      ctx.fillStyle = '#4d3b2b';
+      ctx.strokeStyle = charging ? '#ffb66d' : 'rgba(255, 201, 128, 0.4)';
+      ctx.lineWidth = 1.8;
+      ctx.beginPath(); ctx.ellipse(0, 0, e.radius * 1.16, e.radius * 0.88, 0, 0, TAU); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#2c241c';
+      ctx.beginPath(); ctx.ellipse(4, 0, e.radius * 0.78, e.radius * 0.55, 0, 0, TAU); ctx.fill();
+      ctx.fillStyle = '#7b5a38';
+      ctx.beginPath();
+      ctx.moveTo(e.radius * 0.3, -e.radius * 0.9);
+      ctx.lineTo(e.radius * 1.32, -e.radius * 0.35);
+      ctx.lineTo(e.radius * 0.34, -e.radius * 0.18);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(255, 201, 128, 0.6)';
+      ctx.stroke();
+      ctx.strokeStyle = '#1b1510';
+      ctx.lineWidth = 7;
+      ctx.beginPath();
+      ctx.moveTo(-e.radius * 0.4, -e.radius * 0.5); ctx.lineTo(-e.radius * 1.1 + stride, -e.radius * 0.72);
+      ctx.moveTo(-e.radius * 0.4, e.radius * 0.5); ctx.lineTo(-e.radius * 1.1 - stride, e.radius * 0.72);
+      ctx.stroke();
+      ctx.fillStyle = '#ffbd72';
+      ctx.beginPath(); ctx.arc(e.radius * 0.5, -e.radius * 0.2, 2.2, 0, TAU); ctx.arc(e.radius * 0.5, e.radius * 0.2, 2.2, 0, TAU); ctx.fill();
+      if (e.chargeState === 'windup') {
+        ctx.globalAlpha = 0.75;
+        ctx.strokeStyle = 'rgba(255, 172, 95, 0.8)';
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([5, 6]);
+        ctx.beginPath();
+        ctx.moveTo(e.radius, 0);
+        ctx.lineTo(e.radius + 140, 0);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
     } else if (type === 'zombie') {
       ctx.rotate(e.aimAngle);
       const stride = Math.sin(t * 8 + e.x * 0.04) * 3;
@@ -15833,7 +16451,7 @@
     if (e.spawnTimer > 0) {
       drawSpawnShield(ctx, e, spawnProgress);
     }
-    if (['zombie', 'mutant', 'spider', 'combatRobot', 'repairRobot', 'gunnerRobot'].includes(e.type)) {
+    if (['zombie', 'runner', 'entangler', 'charger', 'mutant', 'spider', 'combatRobot', 'repairRobot', 'gunnerRobot'].includes(e.type)) {
       drawSpecialEnemyBody(ctx, e);
       drawEnemyHealthBar(ctx, e);
       drawStunEffect(ctx, e);
@@ -16160,18 +16778,7 @@
     ctx.fillStyle = e.type === 'boss' ? 'rgba(255, 89, 78, 0.24)' : e.type === 'elite' ? 'rgba(217, 148, 255, 0.2)' : 'rgba(255, 128, 90, 0.18)';
     ctx.fillRect(x, y, w, h);
     const ratio = clamp(e.hp / e.maxHp, 0, 1);
-    const grad = ctx.createLinearGradient(x, 0, x + w, 0);
-    if (e.type === 'boss') {
-      grad.addColorStop(0, '#ff534a');
-      grad.addColorStop(1, '#ffb36e');
-    } else if (e.type === 'elite') {
-      grad.addColorStop(0, '#aa65db');
-      grad.addColorStop(1, '#e4b4ff');
-    } else {
-      grad.addColorStop(0, '#ce5847');
-      grad.addColorStop(1, '#ff9e6b');
-    }
-    ctx.fillStyle = grad;
+    ctx.fillStyle = e.type === 'boss' ? '#ff6a50' : e.type === 'elite' ? '#c17ae8' : '#ff8b61';
     ctx.fillRect(x, y, w * ratio, h);
     if (e.type === 'boss') {
       const bossDef = CAMPAIGN_BOSS_DEFS[e.bossKind || ENEMY_SYSTEMS[game.endlessBiome]?.bossKind] || null;
@@ -16897,12 +17504,17 @@
       const p = game.player;
       if (inView(p.x, p.y, 60, camX, camY)) actors.push({ type: 'player', y: p.y, ref: p });
     }
+    for (const p of game.networkPlayers || []) {
+      if (!p || !inView(p.x, p.y, 70, camX, camY)) continue;
+      actors.push({ type: 'networkPlayer', y: p.y, ref: p });
+    }
     if (game.pet && inView(game.pet.x, game.pet.y, 40, camX, camY)) {
       actors.push({ type: 'pet', y: game.pet.y, ref: game.pet });
     }
     actors.sort((a, b) => a.y - b.y);
     for (const actor of actors) {
-      if (actor.type === 'player') drawPlayerActor(ctx);
+      if (actor.type === 'player') drawPlayerActor(ctx, actor.ref);
+      else if (actor.type === 'networkPlayer') drawNetworkPlayerActor(ctx, actor.ref);
       else if (actor.type === 'pet') drawPet(ctx);
       else drawEnemyActor(ctx, actor.ref);
     }
@@ -16939,22 +17551,26 @@
         ctx.restore();
         continue;
       }
-      const tailX = b.x - (b.vx / Math.hypot(b.vx, b.vy || 0.001)) * 18;
-      const tailY = b.y - (b.vy / Math.hypot(b.vx, b.vy || 0.001)) * 18;
-      const grad = ctx.createLinearGradient(tailX, tailY, b.x, b.y);
-      grad.addColorStop(0, rgba(b.color, 0));
-      grad.addColorStop(0.7, rgba(b.color, 0.45));
-      grad.addColorStop(1, rgba(b.color, 1));
-      ctx.strokeStyle = grad;
-      ctx.lineWidth = 2.1;
+      const speed = Math.hypot(b.vx, b.vy || 0.001) || 1;
+      const tailLength = game.networkMode ? 38 : 18;
+      const tailX = b.x - (b.vx / speed) * tailLength;
+      const tailY = b.y - (b.vy / speed) * tailLength;
+      if (game.networkMode) {
+        ctx.strokeStyle = colorAlpha(b.color, 0.2);
+        ctx.lineWidth = 5.5;
+        ctx.lineCap = 'round';
+        ctx.beginPath(); ctx.moveTo(tailX, tailY); ctx.lineTo(b.x, b.y); ctx.stroke();
+      }
+      ctx.strokeStyle = colorAlpha(b.color, game.networkMode ? 0.82 : 0.52);
+      ctx.lineWidth = game.networkMode ? 2.8 : 2.1;
       ctx.lineCap = 'round';
       ctx.beginPath();
       ctx.moveTo(tailX, tailY);
       ctx.lineTo(b.x, b.y);
       ctx.stroke();
-      ctx.fillStyle = '#fffbe9';
+      ctx.fillStyle = game.networkMode ? '#fffdf1' : '#fffbe9';
       ctx.beginPath();
-      ctx.arc(b.x, b.y, 1.15, 0, TAU);
+      ctx.arc(b.x, b.y, game.networkMode ? 2.1 : 1.15, 0, TAU);
       ctx.fill();
     }
     for (const b of game.enemyBullets) {
@@ -16985,20 +17601,14 @@
         ctx.restore();
         continue;
       }
-      const tx = b.x - (b.vx / Math.hypot(b.vx, b.vy || 0.001)) * 22;
-      const ty = b.y - (b.vy / Math.hypot(b.vx, b.vy || 0.001)) * 22;
-      const g = ctx.createRadialGradient(b.x, b.y, 0, b.x, b.y, b.r * 4.5);
-      g.addColorStop(0, rgba(b.color, 0.9));
-      g.addColorStop(0.22, rgba(b.color, 0.5));
-      g.addColorStop(1, rgba(b.color, 0));
-      ctx.fillStyle = g;
+      const speed = Math.hypot(b.vx, b.vy || 0.001) || 1;
+      const tx = b.x - (b.vx / speed) * 22;
+      const ty = b.y - (b.vy / speed) * 22;
+      ctx.fillStyle = colorAlpha(b.color, 0.16);
       ctx.beginPath();
-      ctx.arc(b.x, b.y, b.r * 4.5, 0, TAU);
+      ctx.arc(b.x, b.y, b.r * 4.2, 0, TAU);
       ctx.fill();
-      const tg = ctx.createLinearGradient(tx, ty, b.x, b.y);
-      tg.addColorStop(0, rgba(b.color, 0));
-      tg.addColorStop(1, rgba(b.color, 0.7));
-      ctx.strokeStyle = tg;
+      ctx.strokeStyle = colorAlpha(b.color, 0.65);
       ctx.lineWidth = b.r * 0.65;
       ctx.lineCap = 'round';
       ctx.beginPath();
@@ -17811,6 +18421,83 @@
     ctx.restore();
   }
 
+  function drawPlayerStatusIndicators(ctx) {
+    const p = game.player;
+    if (!p || !p.alive) return;
+    if (p.entangled) {
+      ctx.save();
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.strokeStyle = 'rgba(232, 171, 255, 0.55)';
+      ctx.lineWidth = 2;
+      for (let i = 0; i < 8; i += 1) {
+        const a = game.time * 2.2 + i / 8 * TAU;
+        ctx.beginPath();
+        ctx.moveTo(p.x + Math.cos(a) * 9, p.y + Math.sin(a) * 9);
+        ctx.quadraticCurveTo(
+          p.x + Math.cos(a + 0.4) * 24, p.y + Math.sin(a + 0.4) * 20,
+          p.x + Math.cos(a + 0.75) * (30 + Math.sin(game.time * 8 + i) * 4),
+          p.y + Math.sin(a + 0.75) * (27 + Math.cos(game.time * 7 + i) * 3),
+        );
+        ctx.stroke();
+      }
+      ctx.restore();
+      const w = 170;
+      const h = 58;
+      const x = p.x - w / 2;
+      const y = p.y - p.r - 88;
+      const progress = clamp((p.entanglePresses || 0) / Math.max(1, p.entangleRequired || 6), 0, 1);
+      const timeRatio = clamp((p.entangleTimer || 0) / Math.max(0.001, p.entangleDuration || 2.55), 0, 1);
+      ctx.save();
+      ctx.fillStyle = 'rgba(8, 5, 12, 0.88)';
+      ctx.strokeStyle = 'rgba(235, 174, 255, 0.85)';
+      ctx.lineWidth = 1.4;
+      ctx.beginPath();
+      ctx.roundRect(x, y, w, h, 6);
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = '#f0c5ff';
+      ctx.font = '700 10px "SFMono-Regular", monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText('缠绕 · 快速连按 F', p.x, y + 14);
+      for (let i = 0; i < (p.entangleRequired || 6); i += 1) {
+        const px = x + 17 + i * 23;
+        ctx.fillStyle = i < (p.entanglePresses || 0) ? '#f0b5ff' : 'rgba(149, 103, 166, 0.35)';
+        ctx.fillRect(px, y + 21, 17, 6);
+      }
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
+      ctx.fillRect(x + 10, y + 34, w - 20, 9);
+      ctx.fillStyle = timeRatio > 0.35 ? '#ffce7a' : '#ff7769';
+      ctx.fillRect(x + 10, y + 34, (w - 20) * timeRatio, 9);
+      ctx.fillStyle = timeRatio > 0.35 ? '#ffdc9a' : '#ff9e8d';
+      ctx.font = '600 7px "SFMono-Regular", monospace';
+      ctx.fillText(`挣脱 ${Math.round(progress * 100)}% · ${Math.max(0, p.entangleTimer).toFixed(1)}s`, p.x, y + 52);
+      ctx.restore();
+    } else if (p.paralyzed > 0) {
+      ctx.save();
+      ctx.translate(p.x, p.y - p.r - 38);
+      const count = 4;
+      for (let i = 0; i < count; i += 1) {
+        const a = game.time * 5 + i / count * TAU;
+        ctx.fillStyle = 'rgba(255, 220, 130, 0.9)';
+        ctx.beginPath();
+        ctx.arc(Math.cos(a) * 15, Math.sin(a) * 5, 1.8, 0, TAU);
+        ctx.fill();
+      }
+      ctx.fillStyle = 'rgba(255, 214, 123, 0.95)';
+      ctx.font = '700 10px "SFMono-Regular", monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText(`眩晕 ${Math.max(0, p.paralyzed).toFixed(1)}s`, 0, 16);
+      ctx.strokeStyle = 'rgba(255, 199, 102, 0.42)';
+      ctx.lineWidth = 1.2;
+      ctx.setLineDash([3, 5]);
+      ctx.beginPath();
+      ctx.arc(0, -3, 22, 0, TAU);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.restore();
+    }
+  }
+
   function drawPlayerReloadIndicator(ctx) {
     const p = game.player;
     if (!p || !p.alive) return;
@@ -17953,6 +18640,65 @@
     }
   }
 
+  function drawNetworkProps(ctx, camX, camY) {
+    for (const barrel of game.networkBarrels || []) {
+      if (barrel.exploded || !inView(barrel.x, barrel.y, 40, camX, camY)) continue;
+      ctx.save();
+      ctx.translate(barrel.x, barrel.y);
+      ctx.fillStyle = '#7b3c29';
+      ctx.strokeStyle = '#ff9a5f';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.arc(0, 0, barrel.r || 15, 0, TAU); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = 'rgba(255, 196, 117, 0.45)';
+      ctx.beginPath(); ctx.arc(0, 0, (barrel.r || 15) * 0.36, 0, TAU); ctx.fill();
+      ctx.restore();
+    }
+    for (const kit of game.networkMedkits || []) {
+      if (!inView(kit.x, kit.y, 30, camX, camY)) continue;
+      ctx.save();
+      ctx.translate(kit.x, kit.y);
+      ctx.fillStyle = 'rgba(92, 255, 190, 0.16)';
+      ctx.strokeStyle = '#7dffd0';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.arc(0, 0, 18, 0, TAU); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#a5ffe0';
+      ctx.fillRect(-7, -2, 14, 4); ctx.fillRect(-2, -7, 4, 14);
+      ctx.restore();
+    }
+  }
+
+  function drawNetworkTracers(ctx) {
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    for (const tracer of game.networkTracers || []) {
+      if (!inView(tracer.x, tracer.y, 220, game.camera.x, game.camera.y)) continue;
+      const alpha = clamp(tracer.life / Math.max(0.001, tracer.maxLife || 0.12), 0, 1);
+      const length = 120 + (tracer.length || 0);
+      ctx.save();
+      ctx.translate(tracer.x, tracer.y);
+      ctx.rotate(tracer.angle || 0);
+      ctx.strokeStyle = `rgba(255, 234, 181, ${alpha * 0.8})`;
+      ctx.lineWidth = 2.4 * alpha + 0.6;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(length, 0);
+      ctx.stroke();
+      ctx.strokeStyle = `rgba(255, 184, 91, ${alpha * 0.35})`;
+      ctx.lineWidth = 7 * alpha + 1;
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(length, 0);
+      ctx.stroke();
+      ctx.fillStyle = `rgba(255, 248, 218, ${alpha})`;
+      ctx.beginPath();
+      ctx.arc(length, 0, 2.2, 0, TAU);
+      ctx.fill();
+      ctx.restore();
+    }
+    ctx.restore();
+  }
+
   function drawWorld(ctx, camX, camY) {
     drawFloorGlows(ctx);
     drawDecals(ctx, camX, camY);
@@ -17963,14 +18709,17 @@
     if (game.runMode === 'campaign') drawCampaignObjects(ctx, camX, camY);
     drawCoins(ctx, camX, camY);
     drawPickups(ctx, camX, camY);
+    if (game.networkMode) drawNetworkProps(ctx, camX, camY);
     drawCasings(ctx, camX, camY);
     drawTelegraphs(ctx, camX, camY);
     drawTurrets(ctx, camX, camY);
     drawActorLayer(ctx, camX, camY);
     drawPlayerReloadIndicator(ctx);
     drawAutoAimTarget(ctx);
+    drawPlayerStatusIndicators(ctx);
     drawCharacterSkillFX(ctx, camX, camY);
     drawBullets(ctx, camX, camY);
+    if (game.networkMode) drawNetworkTracers(ctx);
     drawPlayerMissiles(ctx, camX, camY);
     drawCampaignRockets(ctx, camX, camY);
     drawGrenades(ctx, camX, camY);
@@ -18449,6 +19198,90 @@
     c.fillRect(0, sweep, w, 1);
   }
 
+  function centerNetworkCamera() {
+    const p = game.player;
+    if (!p) return;
+    const viewW = game.viewW / CAMERA_ZOOM;
+    const viewH = game.viewH / CAMERA_ZOOM;
+    game.camera.x = clamp(p.x - viewW / 2, 0, Math.max(0, WORLD.w - viewW));
+    game.camera.y = clamp(p.y - viewH / 2, 0, Math.max(0, WORLD.h - viewH));
+    game.camera.targetX = game.camera.x;
+    game.camera.targetY = game.camera.y;
+  }
+
+  function startNetworkView(options = {}) {
+    game.networkMode = true;
+    game.networkPvp = !!options.pvp;
+    game.networkPlayers = [];
+    game.networkBarrels = [];
+    game.networkMedkits = [];
+    game.networkTracers = [];
+    game.networkTick = options.tick || null;
+    game.networkOnEscape = options.onEscape || null;
+    game.mode = 'playing';
+    game.runMode = 'endless';
+    game.menuMode = 'endless';
+    game.speedMultiplier = 1;
+    game.endlessBiome = options.biome || 'lab';
+    game.campaign.active = false;
+    game.campaign.rogue = false;
+    game.intermission = false;
+    game.wave = options.wave || 1;
+    game.shake = 0;
+    game.deathTimer = 0;
+    hideAllOverlaysForRun();
+    dom.menu.classList.add('is-hidden');
+    dom.hud.classList.remove('is-hidden');
+    dom.bossHud.classList.add('is-hidden');
+    dom.btnShop.classList.add('is-hidden');
+    dom.btnTalents.classList.add('is-hidden');
+    dom.btnSpeed.classList.add('is-hidden');
+    dom.btnPause?.classList.add('is-hidden');
+    dom.btnSettings?.classList.add('is-hidden');
+    dom.abilityBar.classList.add('is-hidden');
+    if (dom.fieldHint) dom.fieldHint.textContent = 'WASD 移动 · 左键射击 · R 换弹 · E 救援 · 1—5 切换武器 · 服务器权威同步';
+    if (dom.pauseHint) dom.pauseHint.textContent = '提示：WASD 移动 · 左键射击 · R 换弹 · E 救援 · 1—5 切换武器';
+    document.body.classList.add('in-game', 'network-mode');
+    document.body.classList.remove('mp-in-game');
+    game.lastFrame = performance.now();
+    resizeCanvas();
+    if (game.player) {
+      centerNetworkCamera();
+      updateHUD();
+    }
+  }
+
+  function stopNetworkView() {
+    game.networkMode = false;
+    game.networkPvp = false;
+    game.networkPlayers = [];
+    game.networkBarrels = [];
+    game.networkMedkits = [];
+    game.networkTracers = [];
+    game.networkTick = null;
+    game.networkOnEscape = null;
+    game.mode = 'menu';
+    game.player = null;
+    game.enemies = [];
+    game.bullets = [];
+    game.enemyBullets = [];
+    game.enemyRockets = [];
+    game.particles = [];
+    game.texts = [];
+    game.bossRef = null;
+    game.intermission = false;
+    dom.hud.classList.add('is-hidden');
+    dom.bossHud.classList.add('is-hidden');
+    dom.btnPause?.classList.remove('is-hidden');
+    dom.btnSettings?.classList.remove('is-hidden');
+    dom.menu.classList.remove('is-hidden');
+    dom.menu.classList.remove('is-closing');
+    document.body.classList.remove('in-game', 'network-mode', 'low-hp');
+    game.camera.x = clampCameraX(690);
+    game.camera.y = clampCameraY(330);
+    updateBestUI();
+  }
+
   function render() {
     const ctx = gctx;
     const dpr = game.dpr;
@@ -18495,7 +19328,10 @@
       if (game.runMode !== 'campaign') drawBossDirection(ctx, camX, camY);
       drawReticle(ctx);
     }
-    if (game.player) drawMinimap();
+    if (game.player && game.time - (game.minimapClock || 0) >= 0.05) {
+      game.minimapClock = game.time;
+      drawMinimap();
+    }
   }
 
   /* ------------------------------------------------------------
@@ -18511,6 +19347,31 @@
     const rawDt = (now - game.lastFrame) / 1000;
     game.lastFrame = now;
     const dt = clamp(rawDt, 0, 0.05);
+    const retinaDisplay = (window.devicePixelRatio || 1) > 1.25;
+    if (retinaDisplay && game.mode === 'playing' && game.player && !document.hidden) {
+      const frameMs = Math.min(100, rawDt * 1000);
+      game.perfAvgMs = (game.perfAvgMs || 16.7) * 0.94 + frameMs * 0.06;
+      game.perfCooldown = Math.max(0, (game.perfCooldown || 0) - rawDt);
+      if (game.perfCooldown <= 0) {
+        const scale = game.renderScale || 1;
+        if (game.perfAvgMs > 18.4 && scale > 0.75) {
+          game.renderScale = Math.max(0.75, scale - 0.08);
+          game.perfCooldown = 2;
+          resizeCanvas();
+        } else if (game.perfAvgMs < 16.35 && scale < 1) {
+          game.renderScale = Math.min(1, scale + 0.04);
+          game.perfCooldown = 4;
+          resizeCanvas();
+        }
+      }
+    }
+    if (game.networkMode) {
+      game.time += dt;
+      if (game.networkTick) game.networkTick(dt);
+      render();
+      window.requestAnimationFrame(frame);
+      return;
+    }
     const fastEndless = game.mode === 'playing' && game.runMode === 'endless' && game.speedMultiplier === 2;
     game.time += dt;
     if (fastEndless) {
@@ -18631,6 +19492,20 @@
       tryCampaignInteract,
       searchCampaignObject,
       skipIntro: finishIntro,
+      startNetworkView,
+      stopNetworkView,
+      centerNetworkCamera,
+      networkMapData: () => ({
+        world: { w: WORLD.w, h: WORLD.h, pad: WORLD.pad },
+        obstacles: OBSTACLES.map((o) => ({ ...o })),
+        doors: DOORS.map((d) => ({ ...d })),
+        spawnPoints: SPAWN_POINTS.map((p) => ({ x: p.x, y: p.y, door: p.door?.label || '' })),
+        bossSpawn: { ...BOSS_SPAWN },
+      }),
+      networkBalanceData: () => ({
+        characters: CHARACTER_DEFS,
+        weapons: WEAPONS,
+      }),
     });
     window.LabZero = Debug;
     window.requestAnimationFrame(frame);

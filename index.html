@@ -339,7 +339,7 @@
             </div>
             <button id="btn-multiplayer" class="mp-entry" type="button">
               <span class="mp-entry-mark">LAN</span>
-              <span class="mp-entry-copy"><b>局域网联机</b><small>PVE 合作 / PVP 对战 · 2—8 人</small></span>
+              <span class="mp-entry-copy"><b>局域网联机</b><small>服务器权威 PVE / PVP · 2—8 人</small></span>
               <span class="mp-entry-arrow">↗</span>
             </button>
             <button id="btn-clear-checkpoint" class="menu-checkpoint-clear is-hidden" type="button">放弃无尽进度</button>
@@ -405,7 +405,7 @@
         <footer class="menu-footer">
           <span><i class="live-dot"></i>OFFLINE SIMULATION · 本地运行</span>
           <span>鼠标控制准星 · 左键单击 / 长按射击</span>
-          <span>BUILD 8.0.0</span>
+          <span>BUILD 9.0.2</span>
         </footer>
       </div>
     </section>
@@ -665,7 +665,7 @@
             <button id="btn-mp-close" type="button">返回主菜单</button>
           </div>
         </header>
-        <p class="mp-lobby-lead">同一局域网内的玩家打开房主地址加入房间。房主负责开局和规则设置；所有人准备后由房主开始。</p>
+        <p class="mp-lobby-lead">同一局域网内的玩家打开服务器地址加入房间。服务器权威运行全部战斗，房主只负责规则设置与开局。</p>
         <div class="mp-lobby-grid">
           <section class="mp-panel mp-connect-panel">
             <h3><span>01</span> 连接</h3>
@@ -703,10 +703,10 @@
           <section class="mp-panel mp-roster-panel">
             <h3><span>03</span> 作战小队 <em id="mp-player-count">0 / 8</em></h3>
             <div id="mp-player-list" class="mp-player-list"></div>
-            <p class="mp-hint">房主会显示皇冠标记。离线成员会自动标记。</p>
+            <p class="mp-hint">战斗由服务器固定帧运行，房主离开不会中断战斗。离线成员会自动标记。</p>
           </section>
         </div>
-        <footer class="mp-lobby-foot"><span id="mp-lobby-tip">等待加入房间…</span><span>LAN ONLY · 无需互联网</span></footer>
+        <footer class="mp-lobby-foot"><span id="mp-lobby-tip">等待加入房间…</span><span>SERVER AUTHORITY · LAN</span></footer>
       </div>
     </section>
 
@@ -735,6 +735,30 @@
         <div class="mp-bottom-hint"><span>WASD 移动 · 左键射击 · R 换弹 · E 救援 · 1/2/3 升级 · ESC 离开</span><b id="mp-net-status">LAN · HOST</b></div>
         <div id="mp-center-message" class="mp-center-message is-hidden"></div>
         <div id="mp-result-panel" class="mp-result-panel is-hidden"></div>
+      </div>
+    </section>
+
+    <!-- ==================== SERVER AUTHORITY NETWORK HUD ==================== -->
+    <div id="net-hud" class="net-hud is-hidden" aria-live="polite">
+      <div class="net-team-card">
+        <div class="net-team-head"><span>作战小队</span><b id="net-engine-status">SERVER AUTHORITY</b></div>
+        <div id="net-team-list" class="net-team-list"></div>
+        <div class="net-team-foot"><span>团队总伤害</span><b id="net-team-damage">0</b></div>
+        <div id="net-round" class="net-round is-hidden"></div>
+      </div>
+      <div id="net-center" class="net-center is-hidden"></div>
+    </div>
+    <section id="net-result-overlay" class="overlay net-result-overlay is-hidden" aria-label="联机结算">
+      <div class="net-result-card">
+        <span class="micro-label">SERVER AUTHORITY // AFTER ACTION</span>
+        <h2 id="net-result-title">作战结束</h2>
+        <p id="net-result-subtitle"></p>
+        <div id="net-result-table"></div>
+        <div class="net-result-actions">
+          <button id="net-result-return" class="btn btn-primary" type="button">结束并返回大厅</button>
+          <button id="net-result-leave" class="btn btn-ghost" type="button">离开房间</button>
+        </div>
+        <p id="net-result-wait" class="net-result-wait is-hidden">等待房主结束本场作战…</p>
       </div>
     </section>
 
